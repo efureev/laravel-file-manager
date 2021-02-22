@@ -33,10 +33,10 @@ class Rename
      */
     public function __construct(Request $request)
     {
-        $this->disk = $request->input('disk');
+        $this->disk    = $request->input('disk');
         $this->newName = $request->input('newName');
         $this->oldName = $request->input('oldName');
-        $this->type = $request->input('type');
+        $this->type    = $request->input('type');
     }
 
     /**

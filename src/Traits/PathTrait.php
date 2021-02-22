@@ -18,7 +18,7 @@ trait PathTrait
             return $name;
         }
 
-        return $path.'/'.$name;
+        return $path . '/' . $name;
     }
 
     /**
@@ -32,7 +32,7 @@ trait PathTrait
     public function renamePath($itemPath, $recipientPath)
     {
         if ($recipientPath) {
-            return $recipientPath.'/'.basename($itemPath);
+            return $recipientPath . '/' . basename($itemPath);
         }
 
         return basename($itemPath);
@@ -52,7 +52,7 @@ trait PathTrait
         $elements = array_slice(explode('/', $itemPath), $partsForRemove);
 
         if ($recipientPath) {
-            return $recipientPath.'/'.implode('/', $elements);
+            return $recipientPath . '/' . implode('/', $elements);
         }
 
         return implode('/', $elements);

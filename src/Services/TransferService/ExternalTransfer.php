@@ -3,8 +3,8 @@
 namespace Alexusmai\LaravelFileManager\Services\TransferService;
 
 use Alexusmai\LaravelFileManager\Traits\PathTrait;
+use Illuminate\Support\Facades\Storage;
 use League\Flysystem\MountManager;
-use Storage;
 
 class ExternalTransfer extends Transfer
 {
@@ -26,10 +26,12 @@ class ExternalTransfer extends Transfer
     {
         parent::__construct($disk, $path, $clipboard);
 
-        $this->manager = new MountManager([
-            'from' => Storage::drive($clipboard['disk'])->getDriver(),
-            'to'   => Storage::drive($disk)->getDriver(),
-        ]);
+        $this->manager = new MountManager(
+            [
+                'from' => Storage::drive($clipboard['disk'])->getDriver(),
+                'to'   => Storage::drive($disk)->getDriver(),
+            ]
+        );
     }
 
     /**
@@ -91,7 +93,7 @@ class ExternalTransfer extends Transfer
         $allDirectories = Storage::disk($this->clipboard['disk'])
             ->allDirectories($directory);
 
-        $partsForRemove = count(explode('/', $directory)) - 1;
+        $partsForRemove = (count(explode('/', $directory)) - 1);
 
         // create this directories
         foreach ($allDirectories as $dir) {
@@ -106,8 +108,10 @@ class ExternalTransfer extends Transfer
 
         // copy files
         foreach ($allFiles as $file) {
-            $this->copyToDisk($file,
-                $this->transformPath($file, $this->path, $partsForRemove));
+            $this->copyToDisk(
+                $file,
+                $this->transformPath($file, $this->path, $partsForRemove)
+            );
         }
     }
 
@@ -122,8 +126,8 @@ class ExternalTransfer extends Transfer
     protected function copyToDisk($filePath, $newPath)
     {
         $this->manager->copy(
-            'from://'.$filePath,
-            'to://'.$newPath
+            'from://' . $filePath,
+            'to://' . $newPath
         );
     }
 
@@ -136,8 +140,8 @@ class ExternalTransfer extends Transfer
     protected function moveToDisk($filePath, $newPath)
     {
         $this->manager->move(
-            'from://'.$filePath,
-            'to://'.$newPath
+            'from://' . $filePath,
+            'to://' . $newPath
         );
     }
 }

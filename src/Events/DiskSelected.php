@@ -2,7 +2,6 @@
 
 namespace Alexusmai\LaravelFileManager\Events;
 
-
 class DiskSelected
 {
     /**

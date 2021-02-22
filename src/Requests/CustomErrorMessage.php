@@ -18,9 +18,14 @@ trait CustomErrorMessage
             ? $this->container->call([$this, 'message'])
             : 'The given data was invalid.';
 
-        throw new HttpResponseException(response()->json([
-            'errors'  => $validator->errors(),
-            'message' => $message,
-        ], 422));
+        throw new HttpResponseException(
+            response()->json(
+                [
+                    'errors'  => $validator->errors(),
+                    'message' => $message,
+                ],
+                422
+            )
+        );
     }
 }

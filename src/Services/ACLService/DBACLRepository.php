@@ -2,6 +2,9 @@
 
 namespace Alexusmai\LaravelFileManager\Services\ACLService;
 
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+
 /**
  * Class DBACLRepository
  *
@@ -16,7 +19,7 @@ class DBACLRepository implements ACLRepository
      */
     public function getUserID()
     {
-        return \Auth::id();
+        return Auth::id();
     }
 
     /**
@@ -26,12 +29,14 @@ class DBACLRepository implements ACLRepository
      */
     public function getRules(): array
     {
-        return \DB::table('acl_rules')
+        return DB::table('acl_rules')
             ->where('user_id', $this->getUserID())
             ->get(['disk', 'path', 'access'])
-            ->map(function ($item) {
-                return get_object_vars($item);
-            })
+            ->map(
+                function ($item) {
+                    return get_object_vars($item);
+                }
+            )
             ->all();
     }
 }

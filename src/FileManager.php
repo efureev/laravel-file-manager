@@ -3,19 +3,21 @@
 namespace Alexusmai\LaravelFileManager;
 
 use Alexusmai\LaravelFileManager\Events\Deleted;
+use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
+use Alexusmai\LaravelFileManager\Services\TransferService\TransferFactory;
 use Alexusmai\LaravelFileManager\Traits\CheckTrait;
 use Alexusmai\LaravelFileManager\Traits\ContentTrait;
 use Alexusmai\LaravelFileManager\Traits\PathTrait;
-use Alexusmai\LaravelFileManager\Services\TransferService\TransferFactory;
-use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
-use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
-use Storage;
-use Image;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Intervention\Image\Facades\Image;
 
 class FileManager
 {
-    use PathTrait, ContentTrait, CheckTrait;
+    use PathTrait;
+    use ContentTrait;
+    use CheckTrait;
 
     /**
      * @var ConfigRepository
@@ -25,7 +27,7 @@ class FileManager
     /**
      * FileManager constructor.
      *
-     * @param  ConfigRepository  $configRepository
+     * @param ConfigRepository $configRepository
      */
     public function __construct(ConfigRepository $configRepository)
     {
@@ -44,7 +46,7 @@ class FileManager
             return [
                 'result' => [
                     'status'  => 'danger',
-                    'message' => 'noConfig'
+                    'message' => 'noConfig',
                 ],
             ];
         }
@@ -63,7 +65,8 @@ class FileManager
         foreach ($this->configRepository->getDiskList() as $disk) {
             if (array_key_exists($disk, config('filesystems.disks'))) {
                 $config['disks'][$disk] = Arr::only(
-                    config('filesystems.disks')[$disk], ['driver']
+                    config('filesystems.disks')[$disk],
+                    ['driver']
                 );
             }
         }
@@ -88,7 +91,7 @@ class FileManager
      *
      * @return array
      */
-    public function content($disk, $path)
+    public function content($disk, $path): array
     {
         // get content for the selected directory
         $content = $this->getContent($disk, $path);
@@ -111,7 +114,7 @@ class FileManager
      *
      * @return array
      */
-    public function tree($disk, $path)
+    public function tree($disk, $path): array
     {
         $directories = $this->getDirectoriesTree($disk, $path);
 
@@ -134,29 +137,32 @@ class FileManager
      *
      * @return array
      */
-    public function upload($disk, $path, $files, $overwrite)
+    public function upload($disk, $path, $files, $overwrite): array
     {
         $fileNotUploaded = false;
 
         foreach ($files as $file) {
             // skip or overwrite files
-            if (!$overwrite
+            if (
+                !$overwrite
                 && Storage::disk($disk)
-                    ->exists($path.'/'.$file->getClientOriginalName())
+                    ->exists($path . '/' . $file->getClientOriginalName())
             ) {
                 continue;
             }
 
             // check file size if need
-            if ($this->configRepository->getMaxUploadFileSize()
-                && $file->getSize() / 1024 > $this->configRepository->getMaxUploadFileSize()
+            if (
+                $this->configRepository->getMaxUploadFileSize()
+                && ($file->getSize() / 1024) > $this->configRepository->getMaxUploadFileSize()
             ) {
                 $fileNotUploaded = true;
                 continue;
             }
 
             // check file type if need
-            if ($this->configRepository->getAllowFileTypes()
+            if (
+                $this->configRepository->getAllowFileTypes()
                 && !in_array(
                     $file->getClientOriginalExtension(),
                     $this->configRepository->getAllowFileTypes()
@@ -208,14 +214,13 @@ class FileManager
             // check all files and folders - exists or no
             if (!Storage::disk($disk)->exists($item['path'])) {
                 continue;
+            }
+            if ($item['type'] === 'dir') {
+                // delete directory
+                Storage::disk($disk)->deleteDirectory($item['path']);
             } else {
-                if ($item['type'] === 'dir') {
-                    // delete directory
-                    Storage::disk($disk)->deleteDirectory($item['path']);
-                } else {
-                    // delete file
-                    Storage::disk($disk)->delete($item['path']);
-                }
+                // delete file
+                Storage::disk($disk)->delete($item['path']);
             }
 
             // add deleted item
@@ -245,7 +250,6 @@ class FileManager
     {
         // compare disk names
         if ($disk !== $clipboard['disk']) {
-
             if (!$this->checkDisk($clipboard['disk'])) {
                 return $this->notFoundMessage();
             }
@@ -310,9 +314,12 @@ class FileManager
     {
         // create thumbnail
         if ($this->configRepository->getCache()) {
-            $thumbnail = Image::cache(function ($image) use ($disk, $path) {
-                $image->make(Storage::disk($disk)->get($path))->fit(80);
-            }, $this->configRepository->getCache());
+            $thumbnail = Image::cache(
+                function ($image) use ($disk, $path) {
+                    $image->make(Storage::disk($disk)->get($path))->fit(80);
+                },
+                $this->configRepository->getCache()
+            );
 
             // output
             return response()->make(
@@ -397,7 +404,7 @@ class FileManager
         );
 
         // add directory properties for the tree module
-        $tree = $directoryProperties;
+        $tree          = $directoryProperties;
         $tree['props'] = ['hasSubdirectories' => false];
 
         return [

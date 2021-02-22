@@ -47,7 +47,7 @@ class FileUpdate
     public function path()
     {
         if ($this->path) {
-            return $this->path.'/'.$this->file->getClientOriginalName();
+            return $this->path . '/' . $this->file->getClientOriginalName();
         }
 
         return $this->file->getClientOriginalName();

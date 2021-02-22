@@ -3,7 +3,7 @@
 namespace Alexusmai\LaravelFileManager\Services\TransferService;
 
 use Alexusmai\LaravelFileManager\Traits\PathTrait;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 class LocalTransfer extends Transfer
 {
@@ -73,7 +73,7 @@ class LocalTransfer extends Transfer
         $allDirectories = Storage::disk($this->disk)
             ->allDirectories($directory);
 
-        $partsForRemove = count(explode('/', $directory)) - 1;
+        $partsForRemove = (count(explode('/', $directory)) - 1);
 
         // create this directories
         foreach ($allDirectories as $dir) {

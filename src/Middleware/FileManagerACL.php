@@ -84,13 +84,14 @@ class FileManagerACL
         $routeName = $request->route()->getName();
 
         // if ACL is OFF or route name wasn't found
-        if ( ! resolve(ConfigRepository::class)->getAcl()
+        if (
+            ! resolve(ConfigRepository::class)->getAcl()
             || ! array_key_exists($routeName, self::CHECKERS)
         ) {
             return $next($request);
         }
 
-        if ( ! call_user_func([$this, self::CHECKERS[$routeName]])) {
+        if (! call_user_func([$this, self::CHECKERS[$routeName]])) {
             return $this->errorMessage();
         }
 
@@ -105,12 +106,14 @@ class FileManagerACL
      */
     protected function errorMessage()
     {
-        return response()->json([
-            'result' => [
-                'status'  => 'error',
-                'message' => 'aclError',
-            ],
-        ]);
+        return response()->json(
+            [
+                'result' => [
+                    'status'  => 'error',
+                    'message' => 'aclError',
+                ],
+            ]
+        );
     }
 
     /**
@@ -145,12 +148,12 @@ class FileManagerACL
      */
     protected function checkCreate()
     {
-        $name = $this->request->input('name');
+        $name        = $this->request->input('name');
         $pathToWrite = $this->request->input('path')
-            ? $this->request->input('path').'/' : '';
+            ? $this->request->input('path') . '/' : '';
 
         // need r/w access
-        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite.$name) !== 2);
+        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite . $name) !== 2);
     }
 
     /**
@@ -161,12 +164,12 @@ class FileManagerACL
     protected function checkUpdate()
     {
         $pathToWrite = $this->request->input('path')
-            ? $this->request->input('path').'/' : '';
+            ? $this->request->input('path') . '/' : '';
 
         $name = $this->request->file('file')->getClientOriginalName();
 
         // need r/w access
-        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite.$name) !== 2);
+        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite . $name) !== 2);
     }
 
     /**
@@ -177,17 +180,20 @@ class FileManagerACL
     protected function checkUpload()
     {
         $pathToWrite = $this->request->input('path')
-            ? $this->request->input('path').'/' : '';
+            ? $this->request->input('path') . '/' : '';
 
         // filter
-        $firstFall = Arr::first($this->request->file('files'),
+        $firstFall = Arr::first(
+            $this->request->file('files'),
             function ($value) use ($pathToWrite) {
                 // need r/w access
                 return $this->acl->getAccessLevel(
-                        $this->disk,
-                        $pathToWrite.$value->getClientOriginalName()
-                    ) !== 2;
-            }, null);
+                    $this->disk,
+                    $pathToWrite . $value->getClientOriginalName()
+                ) !== 2;
+            },
+            null
+        );
 
         // if founded one access error
         if ($firstFall) {
@@ -204,11 +210,14 @@ class FileManagerACL
      */
     protected function checkDelete()
     {
-        $firstFall = Arr::first($this->request->input('items'),
+        $firstFall = Arr::first(
+            $this->request->input('items'),
             function ($value) {
                 // need r/w access
                 return $this->acl->getAccessLevel($this->disk, $value['path']) !== 2;
-            }, null);
+            },
+            null
+        );
 
         if ($firstFall) {
             return false;
@@ -231,15 +240,21 @@ class FileManagerACL
         $getLevel = $clipboard['type'] === 'copy' ? 1 : 2;
 
         // can user copy or cut selected files and folders
-        $checkDirs = Arr::first($clipboard['directories'],
+        $checkDirs = Arr::first(
+            $clipboard['directories'],
             function ($value) use ($clipboard, $getLevel) {
                 return $this->acl->getAccessLevel($clipboard['disk'], $value) < $getLevel;
-            }, null);
+            },
+            null
+        );
 
-        $checkFiles = Arr::first($clipboard['files'],
+        $checkFiles = Arr::first(
+            $clipboard['files'],
             function ($value) use ($clipboard, $getLevel) {
                 return $this->acl->getAccessLevel($clipboard['disk'], $value) < $getLevel;
-            }, null);
+            },
+            null
+        );
 
         // can user write to selected folder?
         $writeToFolder = $this->acl->getAccessLevel($this->disk, $this->path);
@@ -290,18 +305,24 @@ class FileManagerACL
         $elements = $this->request->input('elements');
 
         // can user read selected files and folders?
-        $checkDirs = Arr::first($elements['directories'],
+        $checkDirs = Arr::first(
+            $elements['directories'],
             function ($value) {
                 // need r access
                 return $this->acl->getAccessLevel($this->disk, $value) === 0;
-            }, null);
+            },
+            null
+        );
 
 
-        $checkFiles = Arr::first($elements['files'],
+        $checkFiles = Arr::first(
+            $elements['files'],
             function ($value) {
                 // need r access
                 return $this->acl->getAccessLevel($this->disk, $value) === 0;
-            }, null);
+            },
+            null
+        );
 
         return ! ($checkDirs || $checkFiles);
     }
@@ -314,9 +335,9 @@ class FileManagerACL
     protected function checkUnzip()
     {
         if ($this->request->input('folder')) {
-            $dirname = dirname($this->path) === '.' ? ''
-                : dirname($this->path).'/';
-            $pathToWrite = $dirname.$this->request->input('folder');
+            $dirname     = dirname($this->path) === '.' ? ''
+                : dirname($this->path) . '/';
+            $pathToWrite = $dirname . $this->request->input('folder');
         } else {
             $pathToWrite = dirname($this->path) === '.' ? '/'
                 : dirname($this->path);

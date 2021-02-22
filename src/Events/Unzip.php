@@ -28,8 +28,8 @@ class Unzip
      */
     public function __construct(Request $request)
     {
-        $this->disk = $request->input('disk');
-        $this->path = $request->input('path');
+        $this->disk   = $request->input('disk');
+        $this->path   = $request->input('path');
         $this->folder = $request->input('folder');
     }
 

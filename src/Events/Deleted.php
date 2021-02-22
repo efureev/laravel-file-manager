@@ -23,7 +23,7 @@ class Deleted
      */
     public function __construct($disk, $items)
     {
-        $this->disk = $disk;
+        $this->disk  = $disk;
         $this->items = $items;
     }
 

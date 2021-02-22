@@ -1,40 +1,54 @@
 {
-    "name": "alexusmai/laravel-file-manager",
-    "description": "File manager for Laravel",
-    "keywords": [
-        "laravel",
-        "file",
-        "manager"
-    ],
-    "authors": [
-        {
-            "name": "Aleksandr Manekin",
-            "email": "alexusmai@gmail.com",
-            "role": "Developer"
-        }
-    ],
-    "homepage": "https://github.com/alexusami/laravel-file-manager",
-    "license": "MIT",
-    "minimum-stability": "dev",
-    "require": {
-        "php": ">=7.1.0",
-        "ext-zip": "*",
-        "ext-json": "*",
-        "laravel/framework": "^5.5|^6.0|^7.0|^8.0",
-        "league/flysystem": "^1.0",
-        "intervention/image": "^2.4",
-        "intervention/imagecache": "^2.3"
-    },
-    "autoload": {
-        "psr-4": {
-            "Alexusmai\\LaravelFileManager\\": "src"
-        }
-    },
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Alexusmai\\LaravelFileManager\\FileManagerServiceProvider"
-            ]
-        }
+  "name": "alexusmai/laravel-file-manager",
+  "description": "File manager for Laravel",
+  "keywords": [
+    "laravel",
+    "file",
+    "manager"
+  ],
+  "authors": [
+    {
+      "name": "Aleksandr Manekin",
+      "email": "alexusmai@gmail.com",
+      "role": "Developer"
     }
+  ],
+  "homepage": "https://github.com/alexusami/laravel-file-manager",
+  "license": "MIT",
+  "minimum-stability": "stable",
+  "require": {
+    "php": ">=7.4.0",
+    "ext-zip": "*",
+    "ext-json": "*",
+    "illuminate/support": "^7.30|^8.0",
+    "illuminate/http": "^7.30|^8.0",
+    "league/flysystem": "^1.0",
+    "intervention/image": "^2.5",
+    "intervention/imagecache": "^2.5"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "phpunit/phpunit": "^9.5",
+    "orchestra/testbench": "^5.16",
+    "squizlabs/php_codesniffer": "^3.5"
+  },
+  "autoload": {
+    "psr-4": {
+      "Alexusmai\\LaravelFileManager\\": "src"
+    }
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Alexusmai\\LaravelFileManager\\FileManagerServiceProvider"
+      ]
+    }
+  },
+  "scripts": {
+    "phpcs": "@php ./vendor/bin/phpcs",
+    "cs-fix": "@php ./vendor/bin/phpcbf",
+    "test": "@php ./vendor/bin/phpunit --no-coverage --testdox",
+    "test-cover": "@php ./vendor/bin/phpunit --coverage-text",
+    "phpstan": "@php ./vendor/bin/phpstan analyze --ansi"
+  }
 }

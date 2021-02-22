@@ -2,7 +2,7 @@
 
 namespace Alexusmai\LaravelFileManager\Traits;
 
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 trait CheckTrait
 {

@@ -9,6 +9,5 @@ class BeforeInitialization
      */
     public function __construct()
     {
-
     }
 }

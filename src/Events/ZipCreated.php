@@ -33,9 +33,9 @@ class ZipCreated
      */
     public function __construct(Request $request)
     {
-        $this->disk = $request->input('disk');
-        $this->path = $request->input('path');
-        $this->name = $request->input('name');
+        $this->disk     = $request->input('disk');
+        $this->path     = $request->input('path');
+        $this->name     = $request->input('name');
         $this->elements = $request->input('elements');
     }
 

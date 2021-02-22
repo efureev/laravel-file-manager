@@ -4,7 +4,7 @@ namespace Alexusmai\LaravelFileManager\Services\ACLService;
 
 use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
 use Illuminate\Support\Arr;
-use Cache;
+use Illuminate\Support\Facades\Cache;
 
 class ACL
 {
@@ -21,14 +21,14 @@ class ACL
     /**
      * ACL constructor.
      *
-     * @param  ACLRepository  $aclRepository
-     * @param  ConfigRepository  $configRepository
+     * @param ACLRepository $aclRepository
+     * @param ConfigRepository $configRepository
      */
     public function __construct(
         ACLRepository $aclRepository,
         ConfigRepository $configRepository
     ) {
-        $this->aclRepository = $aclRepository;
+        $this->aclRepository    = $aclRepository;
         $this->configRepository = $configRepository;
     }
 
@@ -46,9 +46,12 @@ class ACL
         $rules = $this->rulesForDisk($disk);
 
         // find the first rule where the paths are equal
-        $firstRule = Arr::first($rules, function ($value) use ($path) {
-            return fnmatch($value['path'], $path);
-        });
+        $firstRule = Arr::first(
+            $rules,
+            function ($value) use ($path) {
+                return fnmatch($value['path'], $path);
+            }
+        );
 
         if ($firstRule) {
             return $firstRule['access'];
@@ -67,10 +70,12 @@ class ACL
      */
     protected function rulesForDisk($disk)
     {
-        return Arr::where($this->rulesList(),
+        return Arr::where(
+            $this->rulesList(),
             function ($value) use ($disk) {
                 return $value['disk'] === $disk;
-            });
+            }
+        );
     }
 
     /**
@@ -82,11 +87,15 @@ class ACL
     {
         // if cache on
         if ($minutes = $this->configRepository->getAclRulesCache()) {
-            $cacheName = get_class($this->aclRepository) . '_' .$this->aclRepository->getUserID();
+            $cacheName = get_class($this->aclRepository) . '_' . $this->aclRepository->getUserID();
 
-            return Cache::remember($cacheName, $minutes, function () {
-                return $this->aclRepository->getRules();
-            });
+            return Cache::remember(
+                $cacheName,
+                $minutes,
+                function () {
+                    return $this->aclRepository->getRules();
+                }
+            );
         }
 
         return $this->aclRepository->getRules();

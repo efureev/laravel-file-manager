@@ -99,12 +99,14 @@ class FileManagerController extends Controller
     {
         event(new DiskSelected($request->input('disk')));
 
-        return response()->json([
-            'result' => [
-                'status'  => 'success',
-                'message' => 'diskSelected',
-            ],
-        ]);
+        return response()->json(
+            [
+                'result' => [
+                    'status'  => 'success',
+                    'message' => 'diskSelected',
+                ],
+            ]
+        );
     }
 
     /**

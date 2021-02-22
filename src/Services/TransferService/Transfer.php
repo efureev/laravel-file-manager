@@ -17,8 +17,8 @@ abstract class Transfer
      */
     public function __construct($disk, $path, $clipboard)
     {
-        $this->disk = $disk;
-        $this->path = $path;
+        $this->disk      = $disk;
+        $this->path      = $path;
         $this->clipboard = $clipboard;
     }
 
@@ -33,7 +33,7 @@ abstract class Transfer
             // determine the type of operation
             if ($this->clipboard['type'] === 'copy') {
                 $this->copy();
-            } elseif ($this->clipboard['type'] === 'cut') {
+            } else if ($this->clipboard['type'] === 'cut') {
                 $this->cut();
             }
         } catch (\Exception $exception) {

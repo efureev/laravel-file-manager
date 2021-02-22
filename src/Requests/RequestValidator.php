@@ -4,7 +4,7 @@ namespace Alexusmai\LaravelFileManager\Requests;
 
 use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
 use Illuminate\Foundation\Http\FormRequest;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 class RequestValidator extends FormRequest
 {
@@ -33,8 +33,9 @@ class RequestValidator extends FormRequest
             'disk' => [
                 'sometimes',
                 'string',
-                function ($attribute, $value, $fail) use($config) {
-                    if (!in_array($value, $config->getDiskList()) ||
+                function ($attribute, $value, $fail) use ($config) {
+                    if (
+                        !in_array($value, $config->getDiskList()) ||
                         !array_key_exists($value, config('filesystems.disks'))
                     ) {
                         return $fail('diskNotFound');
@@ -46,7 +47,8 @@ class RequestValidator extends FormRequest
                 'string',
                 'nullable',
                 function ($attribute, $value, $fail) {
-                    if ($value && !Storage::disk($this->input('disk'))->exists($value)
+                    if (
+                        $value && !Storage::disk($this->input('disk'))->exists($value)
                     ) {
                         return $fail('pathNotFound');
                     }

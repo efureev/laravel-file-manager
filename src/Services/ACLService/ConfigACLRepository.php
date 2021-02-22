@@ -2,6 +2,8 @@
 
 namespace Alexusmai\LaravelFileManager\Services\ACLService;
 
+use Illuminate\Support\Facades\Auth;
+
 /**
  * Class ConfigACLRepository
  *
@@ -18,7 +20,7 @@ class ConfigACLRepository implements ACLRepository
      */
     public function getUserID()
     {
-        return \Auth::id();
+        return Auth::id();
     }
 
     /**
@@ -28,6 +30,6 @@ class ConfigACLRepository implements ACLRepository
      */
     public function getRules(): array
     {
-        return config('file-manager.aclRules')[$this->getUserID()] ?? [];
+        return (config('file-manager.aclRules')[$this->getUserID()] ?? []);
     }
 }

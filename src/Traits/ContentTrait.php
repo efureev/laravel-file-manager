@@ -4,7 +4,7 @@ namespace Alexusmai\LaravelFileManager\Traits;
 
 use Alexusmai\LaravelFileManager\Services\ACLService\ACL;
 use Illuminate\Support\Arr;
-use Storage;
+use Illuminate\Support\Facades\Storage;
 
 trait ContentTrait
 {
@@ -13,7 +13,7 @@ trait ContentTrait
      * Get content for the selected disk and path
      *
      * @param       $disk
-     * @param  null $path
+     * @param null $path
      *
      * @return array
      */
@@ -34,7 +34,7 @@ trait ContentTrait
      * Get directories with properties
      *
      * @param       $disk
-     * @param  null $path
+     * @param null $path
      *
      * @return array
      */
@@ -49,7 +49,7 @@ trait ContentTrait
      * Get files with properties
      *
      * @param       $disk
-     * @param  null $path
+     * @param null $path
      *
      * @return array
      */
@@ -86,7 +86,7 @@ trait ContentTrait
      * File properties
      *
      * @param       $disk
-     * @param  null $path
+     * @param null $path
      *
      * @return mixed
      */
@@ -96,12 +96,12 @@ trait ContentTrait
 
         $pathInfo = pathinfo($path);
 
-        $file['basename'] = $pathInfo['basename'];
-        $file['dirname'] = $pathInfo['dirname'] === '.' ? ''
+        $file['basename']  = $pathInfo['basename'];
+        $file['dirname']   = $pathInfo['dirname'] === '.' ? ''
             : $pathInfo['dirname'];
         $file['extension'] = isset($pathInfo['extension'])
             ? $pathInfo['extension'] : '';
-        $file['filename'] = $pathInfo['filename'];
+        $file['filename']  = $pathInfo['filename'];
 
         // if ACL ON
         if ($this->configRepository->getAcl()) {
@@ -115,7 +115,7 @@ trait ContentTrait
      * Get properties for the selected directory
      *
      * @param       $disk
-     * @param  null $path
+     * @param null $path
      *
      * @return array|false
      */
@@ -134,7 +134,7 @@ trait ContentTrait
         }
 
         $directory['basename'] = $pathInfo['basename'];
-        $directory['dirname'] = $pathInfo['dirname'] === '.' ? ''
+        $directory['dirname']  = $pathInfo['dirname'] === '.' ? ''
             : $pathInfo['dirname'];
 
         // if ACL ON
@@ -155,14 +155,20 @@ trait ContentTrait
     protected function filterDir($disk, $content)
     {
         // select only dir
-        $dirsList = Arr::where($content, function ($item) {
-            return $item['type'] === 'dir';
-        });
+        $dirsList = Arr::where(
+            $content,
+            function ($item) {
+                return $item['type'] === 'dir';
+            }
+        );
 
         // remove 'filename' param
-        $dirs = array_map(function ($item) {
-            return Arr::except($item, ['filename']);
-        }, $dirsList);
+        $dirs = array_map(
+            function ($item) {
+                return Arr::except($item, ['filename']);
+            },
+            $dirsList
+        );
 
         // if ACL ON
         if ($this->configRepository->getAcl()) {
@@ -183,9 +189,12 @@ trait ContentTrait
     protected function filterFile($disk, $content)
     {
         // select only files
-        $files = Arr::where($content, function ($item) {
-            return $item['type'] === 'file';
-        });
+        $files = Arr::where(
+            $content,
+            function ($item) {
+                return $item['type'] === 'file';
+            }
+        );
 
         // if ACL ON
         if ($this->configRepository->getAcl()) {
@@ -207,18 +216,24 @@ trait ContentTrait
     {
         $acl = resolve(ACL::class);
 
-        $withAccess = array_map(function ($item) use ($acl, $disk) {
-            // add acl access level
-            $item['acl'] = $acl->getAccessLevel($disk, $item['path']);
+        $withAccess = array_map(
+            function ($item) use ($acl, $disk) {
+                // add acl access level
+                $item['acl'] = $acl->getAccessLevel($disk, $item['path']);
 
-            return $item;
-        }, $content);
+                return $item;
+            },
+            $content
+        );
 
         // filter files and folders
         if ($this->configRepository->getAclHideFromFM()) {
-            return array_filter($withAccess, function ($item) {
-                return $item['acl'] !== 0;
-            });
+            return array_filter(
+                $withAccess,
+                function ($item) {
+                    return $item['acl'] !== 0;
+                }
+            );
         }
 
         return $withAccess;
