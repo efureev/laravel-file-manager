@@ -16,7 +16,7 @@ jobs:
   testing:
     name: Test on PHP ${{ matrix.php }} with ${{ matrix.setup }} dependencies
 
-    needs: [ phpcs, lint-changelog ]
+    needs: [ phpcs ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
