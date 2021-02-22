@@ -1,8 +1,10 @@
 <?php
 
-namespace Alexusmai\LaravelFileManager\Requests;
+declare(strict_types=1);
 
-use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
+namespace Alexusmai\LaravelFileManager\Http\Requests;
+
+use Alexusmai\LaravelFileManager\Rules\DiskExist;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Storage;
 
@@ -27,30 +29,19 @@ class RequestValidator extends FormRequest
      */
     public function rules()
     {
-        $config = resolve(ConfigRepository::class);
-
         return [
             'disk' => [
                 'sometimes',
                 'string',
-                function ($attribute, $value, $fail) use ($config) {
-                    if (
-                        !in_array($value, $config->getDiskList()) ||
-                        !array_key_exists($value, config('filesystems.disks'))
-                    ) {
-                        return $fail('diskNotFound');
-                    }
-                },
+                DiskExist::class,
             ],
             'path' => [
                 'sometimes',
                 'string',
                 'nullable',
                 function ($attribute, $value, $fail) {
-                    if (
-                        $value && !Storage::disk($this->input('disk'))->exists($value)
-                    ) {
-                        return $fail('pathNotFound');
+                    if ($value && !Storage::disk($this->input('disk'))->exists($value)) {
+                        $fail('pathNotFound');
                     }
                 },
             ],

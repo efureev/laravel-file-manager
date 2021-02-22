@@ -1,13 +1,15 @@
 <?php
 
-namespace Alexusmai\LaravelFileManager\Middleware;
+declare(strict_types=1);
+
+namespace Alexusmai\LaravelFileManager\Http\Middleware;
 
 use Alexusmai\LaravelFileManager\Services\ACLService\ACL;
 use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
 use Alexusmai\LaravelFileManager\Traits\PathTrait;
+use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
-use Closure;
 
 class FileManagerACL
 {
@@ -58,8 +60,8 @@ class FileManagerACL
     /**
      * FileManagerACL constructor.
      *
-     * @param  Request  $request
-     * @param  ACL  $acl
+     * @param Request $request
+     * @param ACL $acl
      */
     public function __construct(Request $request, ACL $acl)
     {
@@ -74,8 +76,8 @@ class FileManagerACL
     /**
      * Handle an incoming request.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
+     * @param \Illuminate\Http\Request $request
+     * @param \Closure $next
      *
      * @return mixed
      */
@@ -85,13 +87,13 @@ class FileManagerACL
 
         // if ACL is OFF or route name wasn't found
         if (
-            ! resolve(ConfigRepository::class)->getAcl()
-            || ! array_key_exists($routeName, self::CHECKERS)
+            !resolve(ConfigRepository::class)->getAcl()
+            || !array_key_exists($routeName, self::CHECKERS)
         ) {
             return $next($request);
         }
 
-        if (! call_user_func([$this, self::CHECKERS[$routeName]])) {
+        if (!call_user_func([$this, self::CHECKERS[$routeName]])) {
             return $this->errorMessage();
         }
 
@@ -124,7 +126,7 @@ class FileManagerACL
     protected function checkContent()
     {
         // need r access
-        return ! ($this->acl->getAccessLevel($this->disk, $this->path) === 0);
+        return !($this->acl->getAccessLevel($this->disk, $this->path) === 0);
     }
 
     /**
@@ -153,7 +155,7 @@ class FileManagerACL
             ? $this->request->input('path') . '/' : '';
 
         // need r/w access
-        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite . $name) !== 2);
+        return !($this->acl->getAccessLevel($this->disk, $pathToWrite . $name) !== 2);
     }
 
     /**
@@ -169,7 +171,7 @@ class FileManagerACL
         $name = $this->request->file('file')->getClientOriginalName();
 
         // need r/w access
-        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite . $name) !== 2);
+        return !($this->acl->getAccessLevel($this->disk, $pathToWrite . $name) !== 2);
     }
 
     /**
@@ -259,7 +261,7 @@ class FileManagerACL
         // can user write to selected folder?
         $writeToFolder = $this->acl->getAccessLevel($this->disk, $this->path);
 
-        return ! ($checkDirs || $checkFiles || $writeToFolder !== 2);
+        return !($checkDirs || $checkFiles || $writeToFolder !== 2);
     }
 
     /**
@@ -276,7 +278,7 @@ class FileManagerACL
         $newPath = $this->request->input('newName');
 
         // need r/w access
-        return ! ($this->acl->getAccessLevel($this->disk, $oldPath) !== 2
+        return !($this->acl->getAccessLevel($this->disk, $oldPath) !== 2
             || $this->acl->getAccessLevel($this->disk, $newPath) !== 2);
     }
 
@@ -324,7 +326,7 @@ class FileManagerACL
             null
         );
 
-        return ! ($checkDirs || $checkFiles);
+        return !($checkDirs || $checkFiles);
     }
 
     /**
@@ -343,7 +345,7 @@ class FileManagerACL
                 : dirname($this->path);
         }
 
-        return ! ($this->acl->getAccessLevel($this->disk, $pathToWrite) !== 2
+        return !($this->acl->getAccessLevel($this->disk, $pathToWrite) !== 2
             || $this->acl->getAccessLevel($this->disk, $this->path) === 0);
     }
 }

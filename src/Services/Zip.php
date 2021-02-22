@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Services;
 
 use Alexusmai\LaravelFileManager\Events\UnzipCreated;

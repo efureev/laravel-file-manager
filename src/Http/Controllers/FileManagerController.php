@@ -1,6 +1,8 @@
 <?php
 
-namespace Alexusmai\LaravelFileManager\Controllers;
+declare(strict_types=1);
+
+namespace Alexusmai\LaravelFileManager\Http\Controllers;
 
 use Alexusmai\LaravelFileManager\Events\BeforeInitialization;
 use Alexusmai\LaravelFileManager\Events\Deleting;
@@ -15,20 +17,22 @@ use Alexusmai\LaravelFileManager\Events\FilesUploading;
 use Alexusmai\LaravelFileManager\Events\FileUpdate;
 use Alexusmai\LaravelFileManager\Events\Paste;
 use Alexusmai\LaravelFileManager\Events\Rename;
-use Alexusmai\LaravelFileManager\Events\Zip as ZipEvent;
 use Alexusmai\LaravelFileManager\Events\Unzip as UnzipEvent;
-use Alexusmai\LaravelFileManager\Requests\RequestValidator;
+use Alexusmai\LaravelFileManager\Events\Zip as ZipEvent;
 use Alexusmai\LaravelFileManager\FileManager;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
+use Alexusmai\LaravelFileManager\Http\Resources\CommonResource;
 use Alexusmai\LaravelFileManager\Services\Zip;
-use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Routing\Controller;
 
 class FileManagerController extends Controller
 {
     /**
      * @var FileManager
      */
-    public $fm;
+    public FileManager $fm;
 
     /**
      * FileManagerController constructor.
@@ -42,16 +46,12 @@ class FileManagerController extends Controller
 
     /**
      * Initialize file manager
-     *
-     * @return \Illuminate\Http\JsonResponse
      */
     public function initialize()
     {
         event(new BeforeInitialization());
 
-        return response()->json(
-            $this->fm->initialize()
-        );
+        return new CommonResource($this->fm->initializeConfig());
     }
 
     /**
@@ -59,9 +59,59 @@ class FileManagerController extends Controller
      *
      * @param RequestValidator $request
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return JsonResource
      */
-    public function content(RequestValidator $request)
+    public function content(RequestValidator $request): JsonResource
+    {
+        return new JsonResource(
+            $this->fm->content(
+                $request->input('disk'),
+                $request->input('path')
+            )
+        );
+    }
+
+    /**
+     * Upload files
+     *
+     * @param RequestValidator $request
+     *
+     * @return JsonResource
+     */
+    public function upload(RequestValidator $request)
+    {
+        event(new FilesUploading($request));
+
+        $uploadResponse = $this->fm->upload(
+            $request->input('disk'),
+            $request->input('path'),
+            $request->file('files'),
+            $request->input('overwrite')
+        );
+
+        event(new FilesUploaded($request));
+
+        return new JsonResource($uploadResponse);
+    }
+
+    /**
+     * File url
+     *
+     * @param RequestValidator $request
+     *
+     * @return JsonResource
+     */
+    public function url(RequestValidator $request)
+    {
+        $url = $this->fm->url($request->input('disk'), $request->input('path'));
+
+        return new JsonResource(['url' => $url]);
+    }
+
+
+
+
+    /*public function content(RequestValidator $request)
     {
         return response()->json(
             $this->fm->content(
@@ -69,7 +119,7 @@ class FileManagerController extends Controller
                 $request->input('path')
             )
         );
-    }
+    }*/
 
     /**
      * Directory tree
@@ -109,28 +159,6 @@ class FileManagerController extends Controller
         );
     }
 
-    /**
-     * Upload files
-     *
-     * @param RequestValidator $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function upload(RequestValidator $request)
-    {
-        event(new FilesUploading($request));
-
-        $uploadResponse = $this->fm->upload(
-            $request->input('disk'),
-            $request->input('path'),
-            $request->file('files'),
-            $request->input('overwrite')
-        );
-
-        event(new FilesUploaded($request));
-
-        return response()->json($uploadResponse);
-    }
 
     /**
      * Delete files and folders
@@ -240,22 +268,6 @@ class FileManagerController extends Controller
         );
     }
 
-    /**
-     * File url
-     *
-     * @param RequestValidator $request
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function url(RequestValidator $request)
-    {
-        return response()->json(
-            $this->fm->url(
-                $request->input('disk'),
-                $request->input('path')
-            )
-        );
-    }
 
     /**
      * Create new directory
@@ -344,7 +356,7 @@ class FileManagerController extends Controller
      * Create zip archive
      *
      * @param RequestValidator $request
-     * @param Zip              $zip
+     * @param Zip $zip
      *
      * @return array
      */
@@ -359,7 +371,7 @@ class FileManagerController extends Controller
      * Extract zip archive
      *
      * @param RequestValidator $request
-     * @param Zip              $zip
+     * @param Zip $zip
      *
      * @return array
      */

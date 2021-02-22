@@ -1,13 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
 class BeforeInitialization
 {
-    /**
-     * BeforeInitialization constructor.
-     */
-    public function __construct()
-    {
-    }
 }

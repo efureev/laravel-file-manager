@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
 use Illuminate\Http\Request;
@@ -9,22 +11,22 @@ class FilesUploading
     /**
      * @var string
      */
-    private $disk;
+    private string $disk;
 
     /**
      * @var string
      */
-    private $path;
+    private string $path;
 
     /**
-     * @var \Illuminate\Http\UploadedFile
+     * @var \Illuminate\Http\UploadedFile[]
      */
-    private $files;
+    private array $files;
 
     /**
      * @var string|null
      */
-    private $overwrite;
+    private bool $overwrite;
 
     /**
      * FilesUploading constructor.
@@ -35,14 +37,14 @@ class FilesUploading
     {
         $this->disk      = $request->input('disk');
         $this->path      = $request->input('path');
-        $this->files     = $request->file('files');
-        $this->overwrite = $request->input('overwrite');
+        $this->files     = ($request->file('files') ?? []);
+        $this->overwrite = (bool)isTrue($request->input('overwrite'));
     }
 
     /**
      * @return string
      */
-    public function disk()
+    public function disk(): string
     {
         return $this->disk;
     }
@@ -50,7 +52,7 @@ class FilesUploading
     /**
      * @return string
      */
-    public function path()
+    public function path(): string
     {
         return $this->path;
     }
@@ -58,16 +60,14 @@ class FilesUploading
     /**
      * @return array
      */
-    public function files()
+    public function files(): array
     {
         return array_map(
-            function ($file) {
-                return [
-                    'name'      => $file->getClientOriginalName(),
-                    'path'      => $this->path . '/' . $file->getClientOriginalName(),
-                    'extension' => $file->extension(),
-                ];
-            },
+            fn($file) => [
+                'name'      => $file->getClientOriginalName(),
+                'path'      => $this->path . '/' . $file->getClientOriginalName(),
+                'extension' => $file->extension(),
+            ],
             $this->files
         );
     }
@@ -75,8 +75,8 @@ class FilesUploading
     /**
      * @return bool
      */
-    public function overwrite()
+    public function overwrite(): bool
     {
-        return !!$this->overwrite;
+        return $this->overwrite;
     }
 }

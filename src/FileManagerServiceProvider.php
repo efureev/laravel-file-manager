@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager;
 
 use Alexusmai\LaravelFileManager\Middleware\FileManagerACL;

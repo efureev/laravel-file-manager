@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Traits;
 
 use Alexusmai\LaravelFileManager\Services\ACLService\ACL;

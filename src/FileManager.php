@@ -1,8 +1,12 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager;
 
 use Alexusmai\LaravelFileManager\Events\Deleted;
+use Alexusmai\LaravelFileManager\Exceptions\FailedUploadException;
+use Alexusmai\LaravelFileManager\Exceptions\MissingConfigException;
 use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
 use Alexusmai\LaravelFileManager\Services\TransferService\TransferFactory;
 use Alexusmai\LaravelFileManager\Traits\CheckTrait;
@@ -39,17 +43,9 @@ class FileManager
      *
      * @return array
      */
-    public function initialize()
+    public function initializeConfig(): array
     {
-        // if config not found
-        if (!config()->has('file-manager')) {
-            return [
-                'result' => [
-                    'status'  => 'danger',
-                    'message' => 'noConfig',
-                ],
-            ];
-        }
+        MissingConfigException::throwIf(!config()->has('file-manager'));
 
         $config = [
             'acl'           => $this->configRepository->getAcl(),
@@ -74,14 +70,54 @@ class FileManager
         // get language
         $config['lang'] = app()->getLocale();
 
-        return [
-            'result' => [
-                'status'  => 'success',
-                'message' => null,
-            ],
-            'config' => $config,
-        ];
+        return $config;
     }
+    /*
+        public function initialize(): array
+        {
+
+            // if config not found
+            if (!config()->has('file-manager')) {
+                return [
+                    'result' => [
+                        'status'  => 'danger',
+                        'message' => 'noConfig',
+                    ],
+                ];
+            }
+
+            $config = [
+                'acl'           => $this->configRepository->getAcl(),
+                'leftDisk'      => $this->configRepository->getLeftDisk(),
+                'rightDisk'     => $this->configRepository->getRightDisk(),
+                'leftPath'      => $this->configRepository->getLeftPath(),
+                'rightPath'     => $this->configRepository->getRightPath(),
+                'windowsConfig' => $this->configRepository->getWindowsConfig(),
+                'hiddenFiles'   => $this->configRepository->getHiddenFiles(),
+            ];
+
+            // disk list
+            foreach ($this->configRepository->getDiskList() as $disk) {
+                if (array_key_exists($disk, config('filesystems.disks'))) {
+                    $config['disks'][$disk] = Arr::only(
+                        config('filesystems.disks')[$disk],
+                        ['driver']
+                    );
+                }
+            }
+
+            // get language
+            $config['lang'] = app()->getLocale();
+
+            return [
+                'result' => [
+                    'status'  => 'success',
+                    'message' => null,
+                ],
+                'config' => $config,
+            ];
+        }
+    */
 
     /**
      * Get files and directories for the selected path and disk
@@ -91,7 +127,18 @@ class FileManager
      *
      * @return array
      */
-    public function content($disk, $path): array
+    public function content(string $disk, ?string $path = null): array
+    {
+        // get content for the selected directory
+        $content = $this->getContent($disk, $path);
+
+        return [
+            'directories' => $content['directories'],
+            'files'       => $content['files'],
+        ];
+    }
+
+    /*public function content($disk, $path): array
     {
         // get content for the selected directory
         $content = $this->getContent($disk, $path);
@@ -104,7 +151,7 @@ class FileManager
             'directories' => $content['directories'],
             'files'       => $content['files'],
         ];
-    }
+    }*/
 
     /**
      * Get part of the directory tree
@@ -130,83 +177,72 @@ class FileManager
     /**
      * Upload files
      *
-     * @param $disk
-     * @param $path
-     * @param $files
-     * @param $overwrite
+     * @param string $disk
+     * @param string $path
+     * @param array $files
+     * @param bool $overwrite
      *
      * @return array
      */
-    public function upload($disk, $path, $files, $overwrite): array
+    public function upload(string $disk, string $path, array $files, bool $overwrite): array
     {
-        $fileNotUploaded = false;
+        $filesUploaded = [];
 
         foreach ($files as $file) {
             // skip or overwrite files
             if (
-                !$overwrite
-                && Storage::disk($disk)
-                    ->exists($path . '/' . $file->getClientOriginalName())
+                !$overwrite && Storage::disk($disk)->exists($path . '/' . $file->getClientOriginalName())
             ) {
                 continue;
             }
 
             // check file size if need
             if (
-                $this->configRepository->getMaxUploadFileSize()
-                && ($file->getSize() / 1024) > $this->configRepository->getMaxUploadFileSize()
+                $this->configRepository->getMaxUploadFileSize() &&
+                ($file->getSize() / 1024) > $this->configRepository->getMaxUploadFileSize()
             ) {
-                $fileNotUploaded = true;
                 continue;
             }
 
             // check file type if need
             if (
-                $this->configRepository->getAllowFileTypes()
-                && !in_array(
-                    $file->getClientOriginalExtension(),
-                    $this->configRepository->getAllowFileTypes()
-                )
+                $this->configRepository->getAllowFileTypes() &&
+                !in_array($file->getClientOriginalExtension(), $this->configRepository->getAllowFileTypes(), true)
             ) {
-                $fileNotUploaded = true;
                 continue;
             }
 
             // overwrite or save file
-            Storage::disk($disk)->putFileAs(
-                $path,
-                $file,
-                $file->getClientOriginalName()
-            );
+            if (
+                $res = Storage::disk($disk)->putFileAs(
+                    $path,
+                    $file,
+                    $file->getClientOriginalName()
+                )
+            ) {
+                $filesUploaded[$res] = $file;
+            }
         }
 
-        // If the some file was not uploaded
-        if ($fileNotUploaded) {
-            return [
-                'result' => [
-                    'status'  => 'warning',
-                    'message' => 'notAllUploaded',
-                ],
-            ];
-        }
+        FailedUploadException::throwIf(count($filesUploaded) < count($files));
 
-        return [
+        return $filesUploaded/*[
             'result' => [
                 'status'  => 'success',
                 'message' => 'uploaded',
             ],
-        ];
+        ]*/ ;
     }
 
     /**
      * Delete files and folders
      *
-     * @param $disk
+     * @param string $disk
      * @param $items
      *
      * @return array
      */
-    public function delete($disk, $items)
+    public function delete(string $disk, $items)
     {
         $deletedItems = [];
 
@@ -354,12 +390,17 @@ class FileManager
     /**
      * Get file URL
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
-     * @return array
+     * @return string
      */
-    public function url($disk, $path)
+    public function url(string $disk, string $path): string
+    {
+        return Storage::disk($disk)->url($path);
+    }
+
+    /*public function url($disk, $path)
     {
         return [
             'result' => [
@@ -368,7 +409,7 @@ class FileManager
             ],
             'url'    => Storage::disk($disk)->url($path),
         ];
-    }
+    }*/
 
     /**
      * Create new directory
