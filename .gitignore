@@ -6,3 +6,5 @@ composer.lock
 
 /storage
 /tests/storage
+.phpunit.result.cache
+clover.xml
