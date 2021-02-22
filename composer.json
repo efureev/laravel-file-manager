@@ -1,5 +1,5 @@
 {
-  "name": "alexusmai/laravel-file-manager",
+  "name": "efureev/laravel-file-manager",
   "description": "File manager for Laravel",
   "keywords": [
     "laravel",
@@ -11,6 +11,11 @@
       "name": "Aleksandr Manekin",
       "email": "alexusmai@gmail.com",
       "role": "Developer"
+    },
+    {
+      "name": "Eugene Fureev",
+      "email": "fureev@gmail.com",
+      "role": "Forker-Developer"
     }
   ],
   "homepage": "https://github.com/alexusami/laravel-file-manager",
@@ -48,7 +53,6 @@
     "phpcs": "@php ./vendor/bin/phpcs",
     "cs-fix": "@php ./vendor/bin/phpcbf",
     "test": "@php ./vendor/bin/phpunit --no-coverage --testdox",
-    "test-cover": "@php ./vendor/bin/phpunit --coverage-text",
-    "phpstan": "@php ./vendor/bin/phpstan analyze --ansi"
+    "test-cover": "@php ./vendor/bin/phpunit --coverage-text"
   }
 }
