@@ -3,20 +3,20 @@ name: Laravel File Manager Package
 on: [ push ]
 
 jobs:
-  phpcs:
-    name: PHPCS
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: PHPCS check
-        uses: chekalsky/phpcs-action@v1
-        with:
-          enable_warnings: true
+#  phpcs:
+#    name: PHPCS
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: PHPCS check
+#        uses: chekalsky/phpcs-action@v1
+#        with:
+#          enable_warnings: true
 
   testing:
     name: Test on PHP ${{ matrix.php }} with ${{ matrix.setup }} dependencies
 
-    needs: [ phpcs ]
+#    needs: [ phpcs ]
     runs-on: ubuntu-latest
     timeout-minutes: 10
 

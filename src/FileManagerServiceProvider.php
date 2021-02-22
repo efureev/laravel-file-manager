@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Alexusmai\LaravelFileManager;
 
-use Alexusmai\LaravelFileManager\Middleware\FileManagerACL;
+use Alexusmai\LaravelFileManager\Http\Middleware\FileManagerACL;
 use Alexusmai\LaravelFileManager\Services\ACLService\ACLRepository;
 use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
 use Illuminate\Support\ServiceProvider;
