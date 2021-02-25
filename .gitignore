@@ -8,3 +8,4 @@ composer.lock
 /tests/storage
 .phpunit.result.cache
 clover.xml
+.DS_Store
