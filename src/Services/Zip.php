@@ -8,6 +8,8 @@ use Alexusmai\LaravelFileManager\Events\UnzipCreated;
 use Alexusmai\LaravelFileManager\Events\UnzipFailed;
 use Alexusmai\LaravelFileManager\Events\ZipCreated;
 use Alexusmai\LaravelFileManager\Events\ZipFailed;
+use Alexusmai\LaravelFileManager\Exceptions\UnZipException;
+use Alexusmai\LaravelFileManager\Exceptions\ZipException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use RecursiveDirectoryIterator;
@@ -16,19 +18,18 @@ use ZipArchive;
 
 class Zip
 {
-    protected $zip;
-    protected $request;
-    protected $pathPrefix;
+    protected ZipArchive $zip;
+    protected Request $request;
+    protected string $pathPrefix;
 
     /**
      * Zip constructor.
      *
-     * @param ZipArchive $zip
      * @param Request $request
      */
-    public function __construct(ZipArchive $zip, Request $request)
+    public function __construct(Request $request)
     {
-        $this->zip        = $zip;
+        $this->zip        = new ZipArchive();
         $this->request    = $request;
         $this->pathPrefix = Storage::disk($request->input('disk'))
             ->getDriver()
@@ -38,69 +39,33 @@ class Zip
 
     /**
      * Create new zip archive
-     *
-     * @return array
+     * @throw ZipException
      */
-    public function create()
+    public function create(): void
     {
-        if ($this->createArchive()) {
-            return [
-                'result' => [
-                    'status'  => 'success',
-                    'message' => null,
-                ],
-            ];
-        }
-
-        return [
-            'result' => [
-                'status'  => 'warning',
-                'message' => 'zipError',
-            ],
-        ];
+        $this->createArchive();
     }
 
     /**
      * Extract
      *
-     * @return array
+     * @throw UnZipException
      */
-    public function extract()
+    public function extract(): void
     {
-        if ($this->extractArchive()) {
-            return [
-                'result' => [
-                    'status'  => 'success',
-                    'message' => null,
-                ],
-            ];
-        }
-
-        return [
-            'result' => [
-                'status'  => 'warning',
-                'message' => 'zipError',
-            ],
-        ];
+        $this->extractArchive();
     }
 
     /**
      * Create zip archive
-     *
-     * @return bool
      */
-    protected function createArchive()
+    protected function createArchive(): void
     {
         // elements list
         $elements = $this->request->input('elements');
 
         // create or overwrite archive
-        if (
-            $this->zip->open(
-                $this->createName(),
-                (ZIPARCHIVE::OVERWRITE | ZIPARCHIVE::CREATE)
-            ) === true
-        ) {
+        if ($this->zip->open($this->createName(), (ZIPARCHIVE::OVERWRITE | ZIPARCHIVE::CREATE)) === true) {
             // files processing
             if ($elements['files']) {
                 foreach ($elements['files'] as $file) {
@@ -120,20 +85,21 @@ class Zip
 
             event(new ZipCreated($this->request));
 
-            return true;
+            return;
         }
 
         event(new ZipFailed($this->request));
 
-        return false;
+        ZipException::throw();
     }
 
     /**
      * Archive extract
      *
-     * @return bool
+     * @return void
+     * @throw UnZipException
      */
-    protected function extractArchive()
+    protected function extractArchive(): void
     {
         $zipPath = $this->pathPrefix . $this->request->input('path');
 
@@ -148,12 +114,12 @@ class Zip
 
             event(new UnzipCreated($this->request));
 
-            return true;
+            return;
         }
 
         event(new UnzipFailed($this->request));
 
-        return false;
+        UnZipException::throw();
     }
 
     /**
@@ -161,7 +127,7 @@ class Zip
      *
      * @param array $directories
      */
-    protected function addDirs(array $directories)
+    protected function addDirs(array $directories): void
     {
         foreach ($directories as $directory) {
             // Create recursive directory iterator
@@ -196,7 +162,7 @@ class Zip
      *
      * @return string
      */
-    protected function createName()
+    protected function createName(): string
     {
         return $this->fullPath($this->request->input('path'))
             . $this->request->input('name');
@@ -209,7 +175,7 @@ class Zip
      *
      * @return string
      */
-    protected function fullPath($path)
+    protected function fullPath($path): string
     {
         return $path ? $this->pathPrefix . $path . '/' : $this->pathPrefix;
     }

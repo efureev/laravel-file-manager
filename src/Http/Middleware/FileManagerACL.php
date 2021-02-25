@@ -18,7 +18,7 @@ class FileManagerACL
     /**
      * Check method names
      */
-    const CHECKERS = [
+    private const CHECKERS = [
         'fm.tree'             => 'checkContent',
         'fm.content'          => 'checkContent',
         'fm.preview'          => 'checkContent',
@@ -40,22 +40,22 @@ class FileManagerACL
     /**
      * @var string|null
      */
-    protected $disk;
+    protected ?string $disk = null;
 
     /**
      * @var string|null
      */
-    protected $path;
+    protected string $path;
 
     /**
      * @var ACL|mixed
      */
-    protected $acl;
+    protected ACL $acl;
 
     /**
      * @var Request
      */
-    protected $request;
+    protected Request $request;
 
     /**
      * FileManagerACL constructor.
@@ -86,14 +86,13 @@ class FileManagerACL
         $routeName = $request->route()->getName();
 
         // if ACL is OFF or route name wasn't found
-        if (
-            !resolve(ConfigRepository::class)->getAcl()
+        if (!resolve(ConfigRepository::class)->getAcl()
             || !array_key_exists($routeName, self::CHECKERS)
         ) {
             return $next($request);
         }
 
-        if (!call_user_func([$this, self::CHECKERS[$routeName]])) {
+        if (!$this->{self::CHECKERS[$routeName]}()) {
             return $this->errorMessage();
         }
 
@@ -190,9 +189,9 @@ class FileManagerACL
             function ($value) use ($pathToWrite) {
                 // need r/w access
                 return $this->acl->getAccessLevel(
-                    $this->disk,
-                    $pathToWrite . $value->getClientOriginalName()
-                ) !== 2;
+                        $this->disk,
+                        $pathToWrite . $value->getClientOriginalName()
+                    ) !== 2;
             },
             null
         );
@@ -292,7 +291,7 @@ class FileManagerACL
         // can user write to selected folder?
         $writeToFolder = $this->acl->getAccessLevel(
             $this->disk,
-            $this->newPath(
+            static::newPath(
                 $this->request->input('path'),
                 $this->request->input('name')
             )

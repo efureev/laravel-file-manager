@@ -10,19 +10,16 @@ class ExternalTransfer extends Transfer
 {
     use PathTrait;
 
-    /**
-     * @var MountManager
-     */
-    public $manager;
+    public MountManager $manager;
 
     /**
      * ExternalTransfer constructor.
      *
-     * @param $disk
-     * @param $path
-     * @param $clipboard
+     * @param string $disk
+     * @param string $path
+     * @param array $clipboard
      */
-    public function __construct($disk, $path, $clipboard)
+    public function __construct(string $disk, string $path, array $clipboard)
     {
         parent::__construct($disk, $path, $clipboard);
 
@@ -39,13 +36,13 @@ class ExternalTransfer extends Transfer
      *
      * @throws \League\Flysystem\FileExistsException
      */
-    protected function copy()
+    protected function copy(): void
     {
         // files
         foreach ($this->clipboard['files'] as $file) {
             $this->copyToDisk(
                 $file,
-                $this->renamePath($file, $this->path)
+                static::renamePath($file, $this->path)
             );
         }
 
@@ -60,13 +57,13 @@ class ExternalTransfer extends Transfer
      *
      * @throws \League\Flysystem\FileExistsException
      */
-    protected function cut()
+    protected function cut(): void
     {
         // files
         foreach ($this->clipboard['files'] as $file) {
             $this->moveToDisk(
                 $file,
-                $this->renamePath($file, $this->path)
+                static::renamePath($file, $this->path)
             );
         }
 
@@ -87,7 +84,7 @@ class ExternalTransfer extends Transfer
      *
      * @throws \League\Flysystem\FileExistsException
      */
-    protected function copyDirectoryToDisk($directory)
+    protected function copyDirectoryToDisk($directory): void
     {
         // get all directories in this directory
         $allDirectories = Storage::disk($this->clipboard['disk'])
@@ -98,7 +95,7 @@ class ExternalTransfer extends Transfer
         // create this directories
         foreach ($allDirectories as $dir) {
             Storage::disk($this->disk)->makeDirectory(
-                $this->transformPath($dir, $this->path, $partsForRemove)
+                static::transformPath($dir, $this->path, $partsForRemove)
             );
         }
 
@@ -110,7 +107,7 @@ class ExternalTransfer extends Transfer
         foreach ($allFiles as $file) {
             $this->copyToDisk(
                 $file,
-                $this->transformPath($file, $this->path, $partsForRemove)
+                static::transformPath($file, $this->path, $partsForRemove)
             );
         }
     }
@@ -123,7 +120,7 @@ class ExternalTransfer extends Transfer
      *
      * @throws \League\Flysystem\FileExistsException
      */
-    protected function copyToDisk($filePath, $newPath)
+    protected function copyToDisk($filePath, $newPath): void
     {
         $this->manager->copy(
             'from://' . $filePath,
@@ -137,7 +134,7 @@ class ExternalTransfer extends Transfer
      * @param $filePath
      * @param $newPath
      */
-    protected function moveToDisk($filePath, $newPath)
+    protected function moveToDisk($filePath, $newPath): void
     {
         $this->manager->move(
             'from://' . $filePath,

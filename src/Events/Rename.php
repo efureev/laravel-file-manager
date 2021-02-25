@@ -9,27 +9,27 @@ class Rename
     /**
      * @var string
      */
-    private $disk;
+    private string $disk;
 
     /**
      * @var string
      */
-    private $newName;
+    private string $newName;
 
     /**
      * @var string
      */
-    private $oldName;
+    private string $oldName;
 
     /**
      * @var string
      */
-    private $type;
+    private string $type;
 
     /**
      * Rename constructor.
      *
-     * @param  Request  $request
+     * @param Request $request
      */
     public function __construct(Request $request)
     {
@@ -42,7 +42,7 @@ class Rename
     /**
      * @return string
      */
-    public function disk()
+    public function disk(): string
     {
         return $this->disk;
     }
@@ -50,7 +50,7 @@ class Rename
     /**
      * @return string
      */
-    public function newName()
+    public function newName(): string
     {
         return $this->newName;
     }
@@ -58,7 +58,7 @@ class Rename
     /**
      * @return string
      */
-    public function oldName()
+    public function oldName(): string
     {
         return $this->oldName;
     }
@@ -66,7 +66,7 @@ class Rename
     /**
      * @return string
      */
-    public function type()
+    public function type(): string
     {
         /*
          *   $info = Storage::disk($this->disk)->getMetadata($this->oldName);

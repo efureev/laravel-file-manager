@@ -14,24 +14,24 @@ trait PathTrait
      *
      * @return string
      */
-    public function newPath($path, $name)
+    public static function newPath(string $path, string $name): string
     {
         if (!$path) {
             return $name;
         }
 
-        return $path . '/' . $name;
+        return "{$path}/{$name}";
     }
 
     /**
      * Rename path - for copy / cut operations
      *
-     * @param $itemPath
-     * @param $recipientPath
+     * @param string $itemPath
+     * @param string|null $recipientPath
      *
      * @return string
      */
-    public function renamePath($itemPath, $recipientPath)
+    public static function renamePath(string $itemPath, string $recipientPath = null): string
     {
         if ($recipientPath) {
             return $recipientPath . '/' . basename($itemPath);
@@ -43,13 +43,13 @@ trait PathTrait
     /**
      * Transform path name
      *
-     * @param $itemPath
-     * @param $recipientPath
-     * @param $partsForRemove
+     * @param string $itemPath
+     * @param string $recipientPath
+     * @param int $partsForRemove
      *
      * @return string
      */
-    public function transformPath($itemPath, $recipientPath, $partsForRemove)
+    public static function transformPath(string $itemPath, string $recipientPath, int $partsForRemove): string
     {
         $elements = array_slice(explode('/', $itemPath), $partsForRemove);
 

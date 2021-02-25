@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace Alexusmai\LaravelFileManager;
 
 use Alexusmai\LaravelFileManager\Events\Deleted;
+use Alexusmai\LaravelFileManager\Exceptions\DirectoryExistsException;
 use Alexusmai\LaravelFileManager\Exceptions\FailedUploadException;
+use Alexusmai\LaravelFileManager\Exceptions\FileExistsException;
 use Alexusmai\LaravelFileManager\Exceptions\MissingConfigException;
+use Alexusmai\LaravelFileManager\Exceptions\NotFoundException;
 use Alexusmai\LaravelFileManager\Services\ConfigService\ConfigRepository;
 use Alexusmai\LaravelFileManager\Services\TransferService\TransferFactory;
 use Alexusmai\LaravelFileManager\Traits\CheckTrait;
@@ -163,6 +166,10 @@ class FileManager
      */
     public function tree($disk, $path): array
     {
+        return $this->getDirectoriesTree($disk, $path);
+    }
+    /*public function tree($disk, $path): array
+    {
         $directories = $this->getDirectoriesTree($disk, $path);
 
         return [
@@ -172,7 +179,7 @@ class FileManager
             ],
             'directories' => $directories,
         ];
-    }
+    }*/
 
     /**
      * Upload files
@@ -190,31 +197,27 @@ class FileManager
 
         foreach ($files as $file) {
             // skip or overwrite files
-            if (
-                !$overwrite && Storage::disk($disk)->exists($path . '/' . $file->getClientOriginalName())
-            ) {
+            if (!$overwrite && Storage::disk($disk)->exists($path . '/' . $file->getClientOriginalName())) {
                 continue;
             }
 
             // check file size if need
-            if (
-                $this->configRepository->getMaxUploadFileSize() &&
+            if ($this->configRepository->getMaxUploadFileSize() &&
                 ($file->getSize() / 1024) > $this->configRepository->getMaxUploadFileSize()
             ) {
                 continue;
             }
 
             // check file type if need
-            if (
-                $this->configRepository->getAllowFileTypes() &&
+            if ($this->configRepository->getAllowFileTypes() &&
                 !in_array($file->getClientOriginalExtension(), $this->configRepository->getAllowFileTypes(), true)
             ) {
                 continue;
             }
 
             // overwrite or save file
-            if (
-                $res = Storage::disk($disk)->putFileAs(
+            if ($res = Storage::disk($disk)
+                ->putFileAs(
                     $path,
                     $file,
                     $file->getClientOriginalName()
@@ -238,11 +241,11 @@ class FileManager
      * Delete files and folders
      *
      * @param string $disk
-     * @param $items
+     * @param array $items
      *
      * @return array
      */
-    public function delete(string $disk, $items)
+    public function delete(string $disk, array $items): array
     {
         $deletedItems = [];
 
@@ -265,30 +268,23 @@ class FileManager
 
         event(new Deleted($disk, $deletedItems));
 
-        return [
-            'result' => [
-                'status'  => 'success',
-                'message' => 'deleted',
-            ],
-        ];
+        return $deletedItems;
     }
 
     /**
      * Copy / Cut - Files and Directories
      *
-     * @param $disk
-     * @param $path
-     * @param $clipboard
+     * @param string $disk
+     * @param string $path
+     * @param array $clipboard
      *
      * @return array
      */
-    public function paste($disk, $path, $clipboard)
+    public function paste(string $disk, string $path, array $clipboard): array
     {
         // compare disk names
         if ($disk !== $clipboard['disk']) {
-            if (!$this->checkDisk($clipboard['disk'])) {
-                return $this->notFoundMessage();
-            }
+            NotFoundException::throwIf(!$this->checkDisk($clipboard['disk']), 'Disk not found');
         }
 
         $transferService = TransferFactory::build($disk, $path, $clipboard);
@@ -303,18 +299,11 @@ class FileManager
      * @param $newName
      * @param $oldName
      *
-     * @return array
+     * @return bool
      */
-    public function rename($disk, $newName, $oldName)
+    public function rename($disk, $newName, $oldName): bool
     {
-        Storage::disk($disk)->move($oldName, $newName);
-
-        return [
-            'result' => [
-                'status'  => 'success',
-                'message' => 'renamed',
-            ],
-        ];
+        return Storage::disk($disk)->move($oldName, $newName);
     }
 
     /**
@@ -340,13 +329,29 @@ class FileManager
     /**
      * Create thumbnails
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
-     * @return \Illuminate\Http\Response|mixed
+     * @return \Intervention\Image\Image
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function thumbnails($disk, $path)
+    public function thumbnails(string $disk, string $path): \Intervention\Image\Image
+    {
+        // create thumbnail
+        if ($this->configRepository->getCache()) {
+            return Image::cache(
+                function ($image) use ($disk, $path) {
+                    $image->make(Storage::disk($disk)->get($path))->fit(80);
+                },
+                $this->configRepository->getCache()
+            );
+        }
+
+        return Image::make(Storage::disk($disk)->get($path))->fit(80);
+    }
+
+
+    /*public function thumbnails($disk, $path)
     {
         // create thumbnail
         if ($this->configRepository->getCache()) {
@@ -365,10 +370,10 @@ class FileManager
             );
         }
 
-        $thumbnail = Image::make(Storage::disk($disk)->get($path))->fit(80);
+        $thumbnail= Image::make(Storage::disk($disk)->get($path))->fit(80);
 
         return $thumbnail->response();
-    }
+    }*/
 
     /**
      * Image preview
@@ -414,13 +419,44 @@ class FileManager
     /**
      * Create new directory
      *
-     * @param $disk
-     * @param $path
-     * @param $name
+     * @param string $disk
+     * @param string $path
+     * @param string $name
      *
      * @return array
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function createDirectory($disk, $path, $name)
+    public function createDirectory(string $disk, string $path, string $name): array
+    {
+        // path for new directory
+        $directoryName = static::newPath($path, $name);
+
+        // check - exist directory or no
+        if (Storage::disk($disk)->exists($directoryName)) {
+            DirectoryExistsException::throw($directoryName);
+        }
+
+        // create new directory
+        Storage::disk($disk)->makeDirectory($directoryName);
+
+        // get directory properties
+        $directoryProperties = $this->directoryProperties(
+            $disk,
+            $directoryName
+        );
+
+        // add directory properties for the tree module
+        $tree          = $directoryProperties;
+        $tree['props'] = ['hasSubdirectories' => false];
+
+        return [
+            'directory' => $directoryProperties,
+            'tree'      => [$tree],
+        ];
+    }
+
+
+    /*public function createDirectory($disk, $path, $name)
     {
         // path for new directory
         $directoryName = $this->newPath($path, $name);
@@ -456,7 +492,7 @@ class FileManager
             'directory' => $directoryProperties,
             'tree'      => [$tree],
         ];
-    }
+    }*/
 
     /**
      * Create new file
@@ -467,34 +503,21 @@ class FileManager
      *
      * @return array
      */
-    public function createFile($disk, $path, $name)
+    public function createFile($disk, $path, $name): array
     {
         // path for new file
-        $path = $this->newPath($path, $name);
+        $path = static::newPath($path, $name);
 
         // check - exist file or no
         if (Storage::disk($disk)->exists($path)) {
-            return [
-                'result' => [
-                    'status'  => 'warning',
-                    'message' => 'fileExist',
-                ],
-            ];
+            FileExistsException::throw($path);
         }
 
         // create new file
         Storage::disk($disk)->put($path, '');
 
         // get file properties
-        $fileProperties = $this->fileProperties($disk, $path);
-
-        return [
-            'result' => [
-                'status'  => 'success',
-                'message' => 'fileCreated',
-            ],
-            'file'   => $fileProperties,
-        ];
+        return $this->fileProperties($disk, $path);
     }
 
     /**
@@ -506,7 +529,7 @@ class FileManager
      *
      * @return array
      */
-    public function updateFile($disk, $path, $file)
+    public function updateFile($disk, $path, $file): array
     {
         // update file
         Storage::disk($disk)->putFileAs(
@@ -516,7 +539,23 @@ class FileManager
         );
 
         // path for new file
-        $filePath = $this->newPath($path, $file->getClientOriginalName());
+        $filePath = static::newPath($path, $file->getClientOriginalName());
+
+        // get file properties
+        return $this->fileProperties($disk, $filePath);
+    }
+
+    /*public function updateFile($disk, $path, $file)
+    {
+        // update file
+        Storage::disk($disk)->putFileAs(
+            $path,
+            $file,
+            $file->getClientOriginalName()
+        );
+
+        // path for new file
+        $filePath = static::newPath($path, $file->getClientOriginalName());
 
         // get file properties
         $fileProperties = $this->fileProperties($disk, $filePath);
@@ -528,7 +567,7 @@ class FileManager
             ],
             'file'   => $fileProperties,
         ];
-    }
+    }*/
 
     /**
      * Stream file - for audio and video

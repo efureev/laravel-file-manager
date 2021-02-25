@@ -10,27 +10,15 @@ class LocalTransfer extends Transfer
     use PathTrait;
 
     /**
-     * LocalTransfer constructor.
-     *
-     * @param $disk
-     * @param $path
-     * @param $clipboard
-     */
-    public function __construct($disk, $path, $clipboard)
-    {
-        parent::__construct($disk, $path, $clipboard);
-    }
-
-    /**
      * Copy files and folders
      */
-    protected function copy()
+    protected function copy(): void
     {
         // files
         foreach ($this->clipboard['files'] as $file) {
             Storage::disk($this->disk)->copy(
                 $file,
-                $this->renamePath($file, $this->path)
+                static::renamePath($file, $this->path)
             );
         }
 
@@ -43,13 +31,13 @@ class LocalTransfer extends Transfer
     /**
      * Cut files and folders
      */
-    protected function cut()
+    protected function cut(): void
     {
         // files
         foreach ($this->clipboard['files'] as $file) {
             Storage::disk($this->disk)->move(
                 $file,
-                $this->renamePath($file, $this->path)
+                static::renamePath($file, $this->path)
             );
         }
 
@@ -57,7 +45,7 @@ class LocalTransfer extends Transfer
         foreach ($this->clipboard['directories'] as $directory) {
             Storage::disk($this->disk)->move(
                 $directory,
-                $this->renamePath($directory, $this->path)
+                static::renamePath($directory, $this->path)
             );
         }
     }
@@ -67,7 +55,7 @@ class LocalTransfer extends Transfer
      *
      * @param $directory
      */
-    protected function copyDirectory($directory)
+    protected function copyDirectory($directory): void
     {
         // get all directories in this directory
         $allDirectories = Storage::disk($this->disk)
@@ -78,7 +66,7 @@ class LocalTransfer extends Transfer
         // create this directories
         foreach ($allDirectories as $dir) {
             Storage::disk($this->disk)->makeDirectory(
-                $this->transformPath(
+                static::transformPath(
                     $dir,
                     $this->path,
                     $partsForRemove
@@ -93,7 +81,7 @@ class LocalTransfer extends Transfer
         foreach ($allFiles as $file) {
             Storage::disk($this->disk)->copy(
                 $file,
-                $this->transformPath($file, $this->path, $partsForRemove)
+                static::transformPath($file, $this->path, $partsForRemove)
             );
         }
     }

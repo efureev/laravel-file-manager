@@ -2,11 +2,13 @@
 
 namespace Alexusmai\LaravelFileManager\Services\TransferService;
 
+use Alexusmai\LaravelFileManager\Exceptions\FileTransferException;
+
 abstract class Transfer
 {
-    public $disk;
-    public $path;
-    public $clipboard;
+    public string $disk;
+    public string $path;
+    public array $clipboard;
 
     /**
      * Transfer constructor.
@@ -15,7 +17,7 @@ abstract class Transfer
      * @param $path
      * @param $clipboard
      */
-    public function __construct($disk, $path, $clipboard)
+    public function __construct(string $disk, string $path, array $clipboard)
     {
         $this->disk      = $disk;
         $this->path      = $path;
@@ -24,36 +26,24 @@ abstract class Transfer
 
     /**
      * Transfer files and folders
-     *
-     * @return array
      */
-    public function filesTransfer()
+    public function filesTransfer(): void
     {
         try {
-            // determine the type of operation
-            if ($this->clipboard['type'] === 'copy') {
-                $this->copy();
-            } else if ($this->clipboard['type'] === 'cut') {
-                $this->cut();
+            switch ($this->clipboard['type']) {
+                case 'copy':
+                    $this->copy();
+                    break;
+                case 'cut':
+                    $this->cut();
+                    break;
             }
         } catch (\Exception $exception) {
-            return [
-                'result' => [
-                    'status'  => 'error',
-                    'message' => $exception->getMessage(),
-                ],
-            ];
+            FileTransferException::throw($exception->getMessage());
         }
-
-        return [
-            'result' => [
-                'status'  => 'success',
-                'message' => 'copied',
-            ],
-        ];
     }
 
-    abstract protected function copy();
+    abstract protected function copy(): void;
 
-    abstract protected function cut();
+    abstract protected function cut(): void;
 }

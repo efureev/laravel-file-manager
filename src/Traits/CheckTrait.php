@@ -8,29 +8,28 @@ use Illuminate\Support\Facades\Storage;
 
 trait CheckTrait
 {
-
     /**
      * Check disk name
      *
-     * @param $name
+     * @param string $name
      *
      * @return bool
      */
-    public function checkDisk($name)
+    public function checkDisk(string $name): bool
     {
-        return in_array($name, $this->configRepository->getDiskList())
+        return in_array($name, $this->configRepository->getDiskList(), true)
             && array_key_exists($name, config('filesystems.disks'));
     }
 
     /**
      * Check Disk and Path
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
      * @return bool
      */
-    public function checkPath($disk, $path)
+    public function checkPath(string $disk, string $path): bool
     {
         // check disk name
         if (!$this->checkDisk($disk)) {
@@ -43,20 +42,5 @@ trait CheckTrait
         }
 
         return true;
-    }
-
-    /**
-     * Disk/path not found message
-     *
-     * @return array
-     */
-    public function notFoundMessage()
-    {
-        return [
-            'result' => [
-                'status'  => 'danger',
-                'message' => 'notFound',
-            ],
-        ];
     }
 }

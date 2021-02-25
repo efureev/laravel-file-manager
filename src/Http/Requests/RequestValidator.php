@@ -27,13 +27,13 @@ class RequestValidator extends FormRequest
      *
      * @return array
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'disk' => [
                 'sometimes',
                 'string',
-                DiskExist::class,
+                new DiskExist(),
             ],
             'path' => [
                 'sometimes',

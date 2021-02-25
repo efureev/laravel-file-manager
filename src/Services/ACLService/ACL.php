@@ -11,12 +11,12 @@ class ACL
     /**
      * @var ACLRepository
      */
-    public $aclRepository;
+    public ACLRepository $aclRepository;
 
     /**
      * @var ConfigRepository
      */
-    public $configRepository;
+    public ConfigRepository $configRepository;
 
     /**
      * ACL constructor.
@@ -24,10 +24,8 @@ class ACL
      * @param ACLRepository $aclRepository
      * @param ConfigRepository $configRepository
      */
-    public function __construct(
-        ACLRepository $aclRepository,
-        ConfigRepository $configRepository
-    ) {
+    public function __construct(ACLRepository $aclRepository, ConfigRepository $configRepository)
+    {
         $this->aclRepository    = $aclRepository;
         $this->configRepository = $configRepository;
     }
@@ -40,7 +38,7 @@ class ACL
      *
      * @return int
      */
-    public function getAccessLevel($disk, $path = '/')
+    public function getAccessLevel($disk, $path = '/'): int
     {
         // get rules list
         $rules = $this->rulesForDisk($disk);
@@ -68,22 +66,20 @@ class ACL
      *
      * @return array
      */
-    protected function rulesForDisk($disk)
+    protected function rulesForDisk($disk): array
     {
         return Arr::where(
             $this->rulesList(),
-            function ($value) use ($disk) {
-                return $value['disk'] === $disk;
-            }
+            fn($value) => $value['disk'] === $disk
         );
     }
 
     /**
      * Get rules list from ACL Repository
      *
-     * @return array|mixed
+     * @return array
      */
-    protected function rulesList()
+    protected function rulesList(): array
     {
         // if cache on
         if ($minutes = $this->configRepository->getAclRulesCache()) {
@@ -92,9 +88,7 @@ class ACL
             return Cache::remember(
                 $cacheName,
                 $minutes,
-                function () {
-                    return $this->aclRepository->getRules();
-                }
+                fn() => $this->aclRepository->getRules()
             );
         }
 

@@ -14,12 +14,12 @@ trait ContentTrait
     /**
      * Get content for the selected disk and path
      *
-     * @param       $disk
+     * @param string $disk
      * @param null $path
      *
      * @return array
      */
-    public function getContent($disk, $path = null)
+    public function getContent(string $disk, $path = null): array
     {
         $content = Storage::disk($disk)->listContents($path);
 
@@ -35,12 +35,12 @@ trait ContentTrait
     /**
      * Get directories with properties
      *
-     * @param       $disk
+     * @param string $disk
      * @param null $path
      *
      * @return array
      */
-    public function directoriesWithProperties($disk, $path = null)
+    public function directoriesWithProperties(string $disk, $path = null): array
     {
         $content = Storage::disk($disk)->listContents($path);
 
@@ -50,12 +50,12 @@ trait ContentTrait
     /**
      * Get files with properties
      *
-     * @param       $disk
+     * @param string $disk
      * @param null $path
      *
      * @return array
      */
-    public function filesWithProperties($disk, $path = null)
+    public function filesWithProperties(string $disk, $path = null): array
     {
         $content = Storage::disk($disk)->listContents($path);
 
@@ -65,12 +65,12 @@ trait ContentTrait
     /**
      * Get directories for tree module
      *
-     * @param $disk
+     * @param string $disk
      * @param $path
      *
      * @return array
      */
-    public function getDirectoriesTree($disk, $path = null)
+    public function getDirectoriesTree(string $disk, $path = null): array
     {
         $directories = $this->directoriesWithProperties($disk, $path);
 
@@ -87,22 +87,21 @@ trait ContentTrait
     /**
      * File properties
      *
-     * @param       $disk
-     * @param null $path
+     * @param string $disk
+     * @param string|null $path
      *
-     * @return mixed
+     * @return array
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function fileProperties($disk, $path = null)
+    public function fileProperties(string $disk, string $path = null): array
     {
         $file = Storage::disk($disk)->getMetadata($path);
 
         $pathInfo = pathinfo($path);
 
         $file['basename']  = $pathInfo['basename'];
-        $file['dirname']   = $pathInfo['dirname'] === '.' ? ''
-            : $pathInfo['dirname'];
-        $file['extension'] = isset($pathInfo['extension'])
-            ? $pathInfo['extension'] : '';
+        $file['dirname']   = $pathInfo['dirname'] === '.' ? '' : $pathInfo['dirname'];
+        $file['extension'] = $pathInfo['extension'] ?? '';
         $file['filename']  = $pathInfo['filename'];
 
         // if ACL ON
@@ -116,12 +115,13 @@ trait ContentTrait
     /**
      * Get properties for the selected directory
      *
-     * @param       $disk
-     * @param null $path
+     * @param string $disk
+     * @param string|null $path
      *
-     * @return array|false
+     * @return array
+     * @throws \League\Flysystem\FileNotFoundException
      */
-    public function directoryProperties($disk, $path = null)
+    public function directoryProperties(string $disk, string $path = null): array
     {
         $directory = Storage::disk($disk)->getMetadata($path);
 
@@ -136,8 +136,7 @@ trait ContentTrait
         }
 
         $directory['basename'] = $pathInfo['basename'];
-        $directory['dirname']  = $pathInfo['dirname'] === '.' ? ''
-            : $pathInfo['dirname'];
+        $directory['dirname']  = $pathInfo['dirname'] === '.' ? '' : $pathInfo['dirname'];
 
         // if ACL ON
         if ($this->configRepository->getAcl()) {
@@ -150,25 +149,19 @@ trait ContentTrait
     /**
      * Get only directories
      *
+     * @param string $disk
      * @param $content
      *
      * @return array
      */
-    protected function filterDir($disk, $content)
+    protected function filterDir(string $disk, $content): array
     {
         // select only dir
-        $dirsList = Arr::where(
-            $content,
-            function ($item) {
-                return $item['type'] === 'dir';
-            }
-        );
+        $dirsList = Arr::where($content, fn($item) => $item['type'] === 'dir');
 
         // remove 'filename' param
         $dirs = array_map(
-            function ($item) {
-                return Arr::except($item, ['filename']);
-            },
+            static fn($item) => Arr::except($item, ['filename']),
             $dirsList
         );
 
@@ -188,7 +181,7 @@ trait ContentTrait
      *
      * @return array
      */
-    protected function filterFile($disk, $content)
+    protected function filterFile($disk, $content): array
     {
         // select only files
         $files = Arr::where(
@@ -212,14 +205,14 @@ trait ContentTrait
      * @param $disk
      * @param $content
      *
-     * @return mixed
+     * @return array
      */
-    protected function aclFilter($disk, $content)
+    protected function aclFilter($disk, $content): array
     {
         $acl = resolve(ACL::class);
 
         $withAccess = array_map(
-            function ($item) use ($acl, $disk) {
+            static function ($item) use ($acl, $disk) {
                 // add acl access level
                 $item['acl'] = $acl->getAccessLevel($disk, $item['path']);
 
@@ -232,9 +225,7 @@ trait ContentTrait
         if ($this->configRepository->getAclHideFromFM()) {
             return array_filter(
                 $withAccess,
-                function ($item) {
-                    return $item['acl'] !== 0;
-                }
+                static fn($item) => $item['acl'] !== 0
             );
         }
 
