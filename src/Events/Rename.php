@@ -1,15 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
 
-class Rename
+final class Rename
 {
-    /**
-     * @var string
-     */
-    private string $disk;
+    use DiskTrait;
 
     /**
      * @var string
@@ -29,22 +28,14 @@ class Rename
     /**
      * Rename constructor.
      *
-     * @param Request $request
+     * @param RequestValidator $request
      */
-    public function __construct(Request $request)
+    public function __construct(RequestValidator $request)
     {
-        $this->disk    = $request->input('disk');
+        $this->disk    = $request->disk();
         $this->newName = $request->input('newName');
         $this->oldName = $request->input('oldName');
         $this->type    = $request->input('type');
-    }
-
-    /**
-     * @return string
-     */
-    public function disk(): string
-    {
-        return $this->disk;
     }
 
     /**

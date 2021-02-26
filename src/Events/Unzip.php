@@ -1,58 +1,36 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
 
 class Unzip
 {
-    /**
-     * @var string
-     */
-    private $disk;
+    use BaseTrait;
 
     /**
      * @var string
      */
-    private $path;
-
-    /**
-     * @var string
-     */
-    private $folder;
+    private string $folder;
 
     /**
      * Unzip constructor.
      *
-     * @param  Request  $request
+     * @param RequestValidator $request
      */
-    public function __construct(Request $request)
+    public function __construct(RequestValidator $request)
     {
-        $this->disk   = $request->input('disk');
-        $this->path   = $request->input('path');
+        $this->disk   = $request->disk();
+        $this->path   = $request->path();
         $this->folder = $request->input('folder');
     }
 
     /**
      * @return string
      */
-    public function disk()
-    {
-        return $this->disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function path()
-    {
-        return $this->path;
-    }
-
-    /**
-     * @return string
-     */
-    public function folder()
+    public function folder(): string
     {
         return $this->folder;
     }

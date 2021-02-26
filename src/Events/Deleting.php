@@ -1,44 +1,31 @@
 <?php
 
-namespace Alexusmai\LaravelFileManager\Events;
+declare(strict_types=1);
 
-use Illuminate\Http\Request;
+namespace Alexusmai\LaravelFileManager\Events;
 
 class Deleting
 {
-    /**
-     * @var string
-     */
-    private $disk;
+    use DiskTrait;
+
+    private array $items;
 
     /**
-     * @var array
-     */
-    private $items;
-
-    /**
-     * Deleting constructor.
+     * Deleted constructor.
      *
-     * @param Request $request
+     * @param string $disk
+     * @param array $items
      */
-    public function __construct(Request $request)
+    public function __construct(string $disk, array $items)
     {
-        $this->disk  = $request->input('disk');
-        $this->items = $request->input('items');
-    }
-
-    /**
-     * @return string
-     */
-    public function disk()
-    {
-        return $this->disk;
+        $this->disk  = $disk;
+        $this->items = $items;
     }
 
     /**
      * @return array
      */
-    public function items()
+    public function items(): array
     {
         return $this->items;
     }

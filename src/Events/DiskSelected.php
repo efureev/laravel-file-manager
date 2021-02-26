@@ -1,29 +1,20 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-class DiskSelected
+final class DiskSelected
 {
-    /**
-     * @var string
-     */
-    private $disk;
+    use DiskTrait;
 
     /**
      * DiskSelected constructor.
      *
      * @param $disk
      */
-    public function __construct($disk)
+    public function __construct(string $disk)
     {
         $this->disk = $disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function disk()
-    {
-        return $this->disk;
     }
 }

@@ -4,57 +4,30 @@ declare(strict_types=1);
 
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
 
 class FilesUploading
 {
-    /**
-     * @var string
-     */
-    private string $disk;
-
-    /**
-     * @var string
-     */
-    private string $path;
+    use BaseTrait;
 
     /**
      * @var \Illuminate\Http\UploadedFile[]
      */
     private array $files;
 
-    /**
-     * @var string|null
-     */
     private bool $overwrite;
 
     /**
      * FilesUploading constructor.
      *
-     * @param Request $request
+     * @param RequestValidator $request
      */
-    public function __construct(Request $request)
+    public function __construct(RequestValidator $request)
     {
-        $this->disk      = $request->input('disk');
-        $this->path      = $request->input('path');
-        $this->files     = ($request->file('files') ?? []);
+        $this->disk      = $request->disk();
+        $this->path      = $request->path();
+        $this->files     = $request->files();
         $this->overwrite = (bool)isTrue($request->input('overwrite'));
-    }
-
-    /**
-     * @return string
-     */
-    public function disk(): string
-    {
-        return $this->disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function path(): string
-    {
-        return $this->path;
     }
 
     /**

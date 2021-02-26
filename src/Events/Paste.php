@@ -1,58 +1,33 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
 
-class Paste
+final class Paste
 {
-    /**
-     * @var string
-     */
-    private $disk;
+    use BaseTrait;
 
-    /**
-     * @var string
-     */
-    private $path;
-
-    /**
-     * @var array
-     */
-    private $clipboard;
+    private array $clipboard;
 
     /**
      * Paste constructor.
      *
-     * @param Request $request
+     * @param RequestValidator $request
      */
-    public function __construct(Request $request)
+    public function __construct(RequestValidator $request)
     {
-        $this->disk      = $request->input('disk');
-        $this->path      = $request->input('path');
+        $this->disk      = $request->disk();
+        $this->path      = $request->path();
         $this->clipboard = $request->input('clipboard');
-    }
-
-    /**
-     * @return string
-     */
-    public function disk()
-    {
-        return $this->disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function path()
-    {
-        return $this->path;
     }
 
     /**
      * @return array
      */
-    public function clipboard()
+    public function clipboard(): array
     {
         return $this->clipboard;
     }

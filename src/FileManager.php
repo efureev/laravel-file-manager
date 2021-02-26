@@ -229,12 +229,7 @@ class FileManager
 
         FailedUploadException::throwIf(count($filesUploaded) < count($files));
 
-        return $filesUploaded/*[
-            'result' => [
-                'status'  => 'success',
-                'message' => 'uploaded',
-            ],
-        ]*/ ;
+        return $filesUploaded;
     }
 
     /**

@@ -101,16 +101,16 @@ class FileManagerController extends Controller
     {
         event(new FilesUploading($request));
 
-        $uploadResponse = $this->fm->upload(
-            $request->input('disk'),
-            $request->input('path'),
-            $request->file('files'),
-            $request->input('overwrite')
+        $uploadFiles = $this->fm->upload(
+            $request->disk(),
+            $request->path(),
+            $request->files(),
+            $request->input('overwrite', false)
         );
 
-        event(new FilesUploaded($request));
+        event(new FilesUploaded($request, $uploadFiles));
 
-        return new JsonResource($uploadResponse);
+        return new JsonResource($uploadFiles);
     }
 
     /**
@@ -288,8 +288,8 @@ class FileManagerController extends Controller
         event(new DirectoryCreating($request));
 
         $createDirectoryResponse = $this->fm->createDirectory(
-            $request->input('disk'),
-            $request->input('path'),
+            $request->disk(),
+            $request->path(),
             $request->input('name')
         );
 

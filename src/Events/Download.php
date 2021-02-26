@@ -1,45 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
 
-class Download
+final class Download
 {
-    /**
-     * @var string
-     */
-    private $disk;
-
-    /**
-     * @var string
-     */
-    private $path;
+    use BaseTrait;
 
     /**
      * Download constructor.
      *
-     * @param Request $request
+     * @param RequestValidator $request
      */
-    public function __construct(Request $request)
+    public function __construct(RequestValidator $request)
     {
-        $this->disk = $request->input('disk');
-        $this->path = $request->input('path');
-    }
-
-    /**
-     * @return string
-     */
-    public function disk()
-    {
-        return $this->disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function path()
-    {
-        return $this->path;
+        $this->disk = $request->disk();
+        $this->path = $request->disk();
     }
 }

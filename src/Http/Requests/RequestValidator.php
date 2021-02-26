@@ -57,4 +57,19 @@ class RequestValidator extends FormRequest
     {
         return 'notFound';
     }
+
+    public function disk(): string
+    {
+        return $this->input('disk');
+    }
+
+    public function path(): string
+    {
+        return $this->input('path', '');
+    }
+
+    public function files(): array
+    {
+        return $this->file('files') ?? [];
+    }
 }

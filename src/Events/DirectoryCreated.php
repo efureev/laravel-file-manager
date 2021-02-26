@@ -1,59 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
-
-class DirectoryCreated
+final class DirectoryCreated extends DirectoryCreating
 {
-    /**
-     * @var string
-     */
-    private $disk;
 
-    /**
-     * @var string
-     */
-    private $path;
-
-    /**
-     * @var string
-     */
-    private $name;
-
-    /**
-     * DirectoryCreated constructor.
-     *
-     * @param Request $request
-     */
-    public function __construct(Request $request)
-    {
-        $this->disk = $request->input('disk');
-        $this->path = $request->input('path');
-        $this->name = $request->input('name');
-    }
-
-    /**
-     * @return string
-     */
-    public function disk()
-    {
-        return $this->disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function path()
-    {
-        return $this->path;
-    }
-
-    /**
-     * @return string
-     */
-    public function name()
-    {
-        return $this->name;
-    }
 }

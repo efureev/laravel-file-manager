@@ -1,20 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Alexusmai\LaravelFileManager\Events;
 
-use Illuminate\Http\Request;
+use Alexusmai\LaravelFileManager\Http\Requests\RequestValidator;
 
-class FileUpdate
+final class FileUpdate
 {
-    /**
-     * @var string
-     */
-    private $disk;
-
-    /**
-     * @var string
-     */
-    private $path;
+    use BaseTrait;
 
     /**
      * @var \Illuminate\Http\UploadedFile
@@ -24,27 +18,19 @@ class FileUpdate
     /**
      * FileUpdate constructor.
      *
-     * @param Request $request
+     * @param RequestValidator $request
      */
-    public function __construct(Request $request)
+    public function __construct(RequestValidator $request)
     {
-        $this->disk = $request->input('disk');
-        $this->path = $request->input('path');
+        $this->disk = $request->disk();
+        $this->path = $request->path();
         $this->file = $request->file('file');
     }
 
     /**
      * @return string
      */
-    public function disk()
-    {
-        return $this->disk;
-    }
-
-    /**
-     * @return string
-     */
-    public function path()
+    public function path(): string
     {
         if ($this->path) {
             return $this->path . '/' . $this->file->getClientOriginalName();
