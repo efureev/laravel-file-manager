@@ -65,7 +65,7 @@ class RequestValidator extends FormRequest
 
     public function path(): string
     {
-        return $this->input('path', '');
+        return $this->input('path') ?? '';
     }
 
     public function files(): array

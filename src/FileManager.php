@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Alexusmai\LaravelFileManager;
 
 use Alexusmai\LaravelFileManager\Events\Deleted;
+use Alexusmai\LaravelFileManager\Events\Deleting;
 use Alexusmai\LaravelFileManager\Exceptions\DirectoryExistsException;
 use Alexusmai\LaravelFileManager\Exceptions\FailedUploadException;
 use Alexusmai\LaravelFileManager\Exceptions\FileExistsException;
@@ -125,12 +126,12 @@ class FileManager
     /**
      * Get files and directories for the selected path and disk
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
      * @return array
      */
-    public function content(string $disk, ?string $path = null): array
+    public function content(string $disk, string $path): array
     {
         // get content for the selected directory
         $content = $this->getContent($disk, $path);
@@ -159,12 +160,12 @@ class FileManager
     /**
      * Get part of the directory tree
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
      * @return array
      */
-    public function tree($disk, $path): array
+    public function tree(string $disk, string $path): array
     {
         return $this->getDirectoriesTree($disk, $path);
     }
@@ -242,6 +243,8 @@ class FileManager
      */
     public function delete(string $disk, array $items): array
     {
+        event(new Deleting($disk, $items));
+
         $deletedItems = [];
 
         foreach ($items as $item) {
@@ -273,9 +276,8 @@ class FileManager
      * @param string $path
      * @param array $clipboard
      *
-     * @return array
      */
-    public function paste(string $disk, string $path, array $clipboard): array
+    public function paste(string $disk, string $path, array $clipboard): void
     {
         // compare disk names
         if ($disk !== $clipboard['disk']) {
@@ -284,19 +286,19 @@ class FileManager
 
         $transferService = TransferFactory::build($disk, $path, $clipboard);
 
-        return $transferService->filesTransfer();
+        $transferService->filesTransfer();
     }
 
     /**
      * Rename file or folder
      *
-     * @param $disk
-     * @param $newName
-     * @param $oldName
+     * @param string $disk
+     * @param string $newName
+     * @param string $oldName
      *
      * @return bool
      */
-    public function rename($disk, $newName, $oldName): bool
+    public function rename(string $disk, string $newName, string $oldName): bool
     {
         return Storage::disk($disk)->move($oldName, $newName);
     }
@@ -304,12 +306,12 @@ class FileManager
     /**
      * Download selected file
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
      * @return mixed
      */
-    public function download($disk, $path)
+    public function download(string $disk, string $path)
     {
         // if file name not in ASCII format
         if (!preg_match('/^[\x20-\x7e]*$/', basename($path))) {
@@ -373,13 +375,13 @@ class FileManager
     /**
      * Image preview
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
      * @return mixed
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
      */
-    public function preview($disk, $path)
+    public function preview(string $disk, string $path)
     {
         // get image
         $preview = Image::make(Storage::disk($disk)->get($path));
@@ -492,13 +494,13 @@ class FileManager
     /**
      * Create new file
      *
-     * @param $disk
-     * @param $path
-     * @param $name
+     * @param string $disk
+     * @param string $path
+     * @param string $name
      *
      * @return array
      */
-    public function createFile($disk, $path, $name): array
+    public function createFile(string $disk, string $path, string $name): array
     {
         // path for new file
         $path = static::newPath($path, $name);
@@ -518,13 +520,13 @@ class FileManager
     /**
      * Update file
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      * @param $file
      *
      * @return array
      */
-    public function updateFile($disk, $path, $file): array
+    public function updateFile(string $disk, string $path, $file): array
     {
         // update file
         Storage::disk($disk)->putFileAs(
@@ -567,12 +569,12 @@ class FileManager
     /**
      * Stream file - for audio and video
      *
-     * @param $disk
-     * @param $path
+     * @param string $disk
+     * @param string $path
      *
-     * @return mixed
+     * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
-    public function streamFile($disk, $path)
+    public function streamFile(string $disk, string $path)
     {
         // if file name not in ASCII format
         if (!preg_match('/^[\x20-\x7e]*$/', basename($path))) {

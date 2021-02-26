@@ -67,8 +67,8 @@ class FileManagerController extends Controller
     {
         return new JsonResource(
             $this->fm->content(
-                $request->input('disk'),
-                $request->input('path')
+                $request->disk(),
+                $request->path(),
             )
         );
     }
@@ -84,8 +84,8 @@ class FileManagerController extends Controller
     {
         return new JsonResource(
             $this->fm->tree(
-                $request->input('disk'),
-                $request->input('path')
+                $request->disk(),
+                $request->path(),
             )
         );
     }
@@ -105,7 +105,7 @@ class FileManagerController extends Controller
             $request->disk(),
             $request->path(),
             $request->files(),
-            $request->input('overwrite', false)
+            (bool)isTrue($request->input('overwrite'))
         );
 
         event(new FilesUploaded($request, $uploadFiles));
@@ -122,7 +122,10 @@ class FileManagerController extends Controller
      */
     public function url(RequestValidator $request): JsonResource
     {
-        $url = $this->fm->url($request->input('disk'), $request->input('path'));
+        $url = $this->fm->url(
+            $request->disk(),
+            $request->path()
+        );
 
         return new JsonResource(['url' => $url]);
     }
@@ -149,7 +152,7 @@ class FileManagerController extends Controller
      */
     public function selectDisk(RequestValidator $request): JsonResource
     {
-        event(new DiskSelected($request->input('disk')));
+        event(new DiskSelected($request->disk()));
 
         return new JsonResource(
             [
@@ -168,10 +171,8 @@ class FileManagerController extends Controller
      */
     public function delete(RequestValidator $request): JsonResource
     {
-        event(new Deleting($request));
-
         $deletedItems = $this->fm->delete(
-            $request->input('disk'),
+            $request->disk(),
             $request->input('items')
         );
 
@@ -183,19 +184,19 @@ class FileManagerController extends Controller
      *
      * @param RequestValidator $request
      *
-     * @return JsonResource
+     * @return Response
      */
-    public function paste(RequestValidator $request): JsonResource
+    public function paste(RequestValidator $request): Response
     {
         event(new Paste($request));
 
-        return new JsonResource(
-            $this->fm->paste(
-                $request->input('disk'),
-                $request->input('path'),
-                $request->input('clipboard')
-            )
+        $this->fm->paste(
+            $request->disk(),
+            $request->path(),
+            $request->input('clipboard')
         );
+
+        return response()->noContent();
     }
 
     /**
@@ -210,7 +211,7 @@ class FileManagerController extends Controller
         event(new Rename($request));
 
         $this->fm->rename(
-            $request->input('disk'),
+            $request->disk(),
             $request->input('newName'),
             $request->input('oldName')
         );
@@ -230,8 +231,8 @@ class FileManagerController extends Controller
         event(new Download($request));
 
         return $this->fm->download(
-            $request->input('disk'),
-            $request->input('path')
+            $request->disk(),
+            $request->path(),
         );
     }
 
@@ -246,9 +247,10 @@ class FileManagerController extends Controller
     public function thumbnails(RequestValidator $request): Response
     {
         $thumbnail = $this->fm->thumbnails(
-            $request->input('disk'),
-            $request->input('path')
+            $request->disk(),
+            $request->path(),
         );
+
         return $thumbnail->response();
         // output
         /*return response()->make(
@@ -269,8 +271,8 @@ class FileManagerController extends Controller
     public function preview(RequestValidator $request)
     {
         return $this->fm->preview(
-            $request->input('disk'),
-            $request->input('path')
+            $request->disk(),
+            $request->path(),
         );
     }
 
@@ -310,8 +312,8 @@ class FileManagerController extends Controller
         event(new FileCreating($request));
 
         $createFileResponse = $this->fm->createFile(
-            $request->input('disk'),
-            $request->input('path'),
+            $request->disk(),
+            $request->path(),
             $request->input('name')
         );
 
@@ -338,8 +340,8 @@ class FileManagerController extends Controller
         return new JsonResource(
             [
                 'file' => $this->fm->updateFile(
-                    $request->input('disk'),
-                    $request->input('path'),
+                    $request->disk(),
+                    $request->path(),
                     $request->file('file')
                 ),
             ]
@@ -356,8 +358,8 @@ class FileManagerController extends Controller
     public function streamFile(RequestValidator $request)
     {
         return $this->fm->streamFile(
-            $request->input('disk'),
-            $request->input('path')
+            $request->disk(),
+            $request->path()
         );
     }
 

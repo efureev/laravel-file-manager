@@ -13,6 +13,8 @@ class Deleting
     /**
      * Deleted constructor.
      *
+     * Deleting constructor.
+     *
      * @param string $disk
      * @param array $items
      */

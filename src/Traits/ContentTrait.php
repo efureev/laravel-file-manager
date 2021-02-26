@@ -15,11 +15,11 @@ trait ContentTrait
      * Get content for the selected disk and path
      *
      * @param string $disk
-     * @param null $path
+     * @param string $path
      *
      * @return array
      */
-    public function getContent(string $disk, $path = null): array
+    public function getContent(string $disk, string $path): array
     {
         $content = Storage::disk($disk)->listContents($path);
 
@@ -66,11 +66,11 @@ trait ContentTrait
      * Get directories for tree module
      *
      * @param string $disk
-     * @param $path
+     * @param string $path
      *
      * @return array
      */
-    public function getDirectoriesTree(string $disk, $path = null): array
+    public function getDirectoriesTree(string $disk, string $path): array
     {
         $directories = $this->directoriesWithProperties($disk, $path);
 
