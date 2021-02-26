@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Alexusmai\LaravelFileManager\Traits;
 
+use Illuminate\Support\Facades\Storage;
+
 trait PathTrait
 {
     /**
@@ -31,13 +33,31 @@ trait PathTrait
      *
      * @return string
      */
-    public static function renamePath(string $itemPath, string $recipientPath = null): string
+    public static function renamePath(string $itemPath, string $recipientPath): string
     {
         if ($recipientPath) {
             return $recipientPath . '/' . basename($itemPath);
         }
 
         return basename($itemPath);
+    }
+
+    public static function buildPathName(string $disk, string $filePath): string
+    {
+        $count     = 0;
+        $fileData  = pathinfo($filePath);
+        $extension = $fileData['extension'];
+        $filename  = $fileData['filename'];
+        $dirname   = $fileData['dirname'];
+
+        $filenameOriginal = $filename;
+
+        while (Storage::disk($disk)->exists($filePath)) {
+            $filename = $filenameOriginal . '_' . ++$count;
+            $filePath = "$dirname/$filename.$extension";
+        }
+
+        return $filePath;
     }
 
     /**

@@ -16,10 +16,10 @@ class LocalTransfer extends Transfer
     {
         // files
         foreach ($this->clipboard['files'] as $file) {
-            Storage::disk($this->disk)->copy(
-                $file,
-                static::renamePath($file, $this->path)
-            );
+            $path = static::renamePath($file, $this->path);
+            $path = static::buildPathName($this->disk, $path);
+
+            Storage::disk($this->disk)->copy($file, $path);
         }
 
         // directories
@@ -53,9 +53,9 @@ class LocalTransfer extends Transfer
     /**
      * Copy directory
      *
-     * @param $directory
+     * @param string $directory
      */
-    protected function copyDirectory($directory): void
+    protected function copyDirectory(string $directory): void
     {
         // get all directories in this directory
         $allDirectories = Storage::disk($this->disk)
